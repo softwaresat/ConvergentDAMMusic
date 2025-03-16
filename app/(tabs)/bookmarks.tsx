@@ -1,8 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, StatusBar, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Image, Platform } from 'react-native';
+
+import { Collapsible } from '@/components/Collapsible';
+import { ExternalLink } from '@/components/ExternalLink';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import React from 'react';
+import { View, Text, TextInput, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const posts = [
   {
@@ -21,22 +27,33 @@ const posts = [
     date: 'Fri, March 28th - 6:30 PM',
     price: 'Price',
   },
+  {
+    id: '3',
+    artistName: 'Artist Name',
+    venueName: 'Venue Name',
+    genre: 'Genre',
+    date: 'Fri, March 28th - 6:30 PM',
+    price: 'Price',
+  },
 ];
 
-export default function HomeScreen() {
+export default function BookmarksScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Find performances"
-        placeholderTextColor="#888"
-      />
+      <Text style={styles.title}>Saved</Text>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search your bookmarks"
+          placeholderTextColor="#888"
+        />
+        <IconSymbol name="settings" size={24} color="#000" style={styles.searchIcon} />
+      </View>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ThemedView style={styles.postContainer}>
+          <View style={styles.postContainer}>
             <View style={styles.postHeader}>
               <View style={styles.artistInfo}>
                 <IconSymbol name="account-circle" size={24} color="#000" />
@@ -56,41 +73,56 @@ export default function HomeScreen() {
               <Text style={styles.date}>{item.date}</Text>
               <Text style={styles.price}>{item.price}</Text>
             </View>
-          </ThemedView>
+          </View>
         )}
+        contentContainerStyle={styles.flatListContent}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  headerImage: {
+    color: '#808080',
+    bottom: -90,
+    left: -35,
+    position: 'absolute',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    padding: 16,
     backgroundColor: '#fff',
   },
-  searchBar: {
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     margin: 16,
-    padding: 10,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
+  },
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    padding: 8,
+  },
+  searchIcon: {
+    marginLeft: 8,
   },
   postContainer: {
     margin: 16,
     padding: 16,
     borderRadius: 10,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    backgroundColor: '#f0f0f0',
   },
   postHeader: {
     flexDirection: 'row',
@@ -133,5 +165,8 @@ const styles = StyleSheet.create({
   },
   price: {
     fontWeight: 'bold',
+  },
+  flatListContent: {
+    paddingBottom: 16,
   },
 });
