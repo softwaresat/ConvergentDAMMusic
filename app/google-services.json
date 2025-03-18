@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "813947824620",
+    "project_id": "convergentdammusic",
+    "storage_bucket": "convergentdammusic.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:813947824620:android:4f3aafb24a789675b6b8c9",
+        "android_client_info": {
+          "package_name": "com.convergent.dammusic"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrTxaGD7e0VG9m5SiDmJkrJ-2Ur7zeGg0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
