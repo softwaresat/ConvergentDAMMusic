@@ -58,14 +58,14 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={globalStyles.container}>
       <View style={globalStyles.searchBar}>
-        <MaterialIcons name="search" size={20} color="#888" style={styles.searchIcon} />
+        <MaterialIcons name="search" size={20} color="#888" style={globalStyles.searchIcon} />
         <TextInput
           style={globalStyles.searchInput}
           placeholder="Find performances"
           placeholderTextColor="#888"
         />
         <TouchableOpacity onPress={() => router.push('/filter')}> {/* Navigate to filter.tsx */}
-          <MaterialIcons name="tune" size={20} color="#888" style={styles.filterIcon} />
+          <MaterialIcons name="tune" size={20} color="#888" style={globalStyles.filterIcon} />
         </TouchableOpacity>
       </View>
       
