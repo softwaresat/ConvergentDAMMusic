@@ -6,11 +6,14 @@ import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../hooks/firebase'; // Ensure this import path is correct
+import { useRouter } from 'expo-router'; // Import the useRouter hook
 import globalStyles from '../../styles/globalStyles'; // adjust path as needed
 
 
 export default function HomeScreen() {
   console.log('🔥 HomeScreen is mounting...');
+
+  const router = useRouter(); // Initialize the router
 
   const [concerts, setConcerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,11 +57,17 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={globalStyles.container}>
-      <TextInput
-        style={globalStyles.searchBar}
-        placeholder="Find performances"
-        placeholderTextColor="#888"
-      />
+      <View style={globalStyles.searchBar}>
+        <MaterialIcons name="search" size={20} color="#888" style={styles.searchIcon} />
+        <TextInput
+          style={globalStyles.searchInput}
+          placeholder="Find performances"
+          placeholderTextColor="#888"
+        />
+        <TouchableOpacity onPress={() => router.push('/filter')}> {/* Navigate to filter.tsx */}
+          <MaterialIcons name="tune" size={20} color="#888" style={styles.filterIcon} />
+        </TouchableOpacity>
+      </View>
       
       <FlatList
   data={concerts}

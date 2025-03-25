@@ -52,6 +52,7 @@ export default function ProfileScreen() {
   }, []);
 
   return (
+
     <SafeAreaView style={globalStyles.container}>
       <View style={globalStyles.header}>
       <MaterialIcons name="account-circle" size={20} color="white" />
@@ -116,3 +117,4 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
+
