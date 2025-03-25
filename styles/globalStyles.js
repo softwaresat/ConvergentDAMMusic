@@ -6,17 +6,31 @@ const globalStyles = StyleSheet.create({
   /* 🔲 Container */
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0', // Changed from white to original style
+    backgroundColor: '#000', // Black background for the app
   },
 
   /* 🔠 Search Bar */
   searchBar: {
-    margin: 16,
-    padding: 10,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-    fontSize: width * 0.04,
-    color: 'black',
+    flexDirection: 'row', // Align items horizontally
+    alignItems: 'center', // Center items vertically
+    backgroundColor: '#e0e0e0', // Light gray background
+    borderRadius: 20, // Rounded corners
+    paddingHorizontal: 10, // Horizontal padding inside the container
+    margin: 16, // Margin around the search bar
+    height: 40, // Fixed height for the search bar
+  },
+  searchIcon: {
+    color: "black",
+    marginRight: 8, // Space between the search icon and the text input
+  },
+  searchInput: {
+    flex: 1, // Take up remaining space
+    fontSize: 16, // Font size for the input text
+    color: '#000', // Black text color
+  },
+  filterIcon: { 
+    color: "black",
+    marginLeft: 8, // Space between the text input and the filter icon
   },
 
   /* 📄 Header Section */
@@ -45,10 +59,9 @@ const globalStyles = StyleSheet.create({
   /* 🧾 Post Container */
   postContainer: {
     margin: 16,
-    padding: 16, // Added from second style
     borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f0', // Unified background
+    overflow: 'hidden', // Ensure content stays within rounded corners
+    backgroundColor: '#1c1c1c', // Dark background for the card
   },
   postHeader: {
     flexDirection: 'row',
@@ -75,7 +88,8 @@ const globalStyles = StyleSheet.create({
   /* 🖼️ Poster Image */
   posterImage: {
     width: '100%',
-    height: 200,
+    height: 200, // Fixed height for the image
+    justifyContent: 'flex-end', // Align overlay content to the bottom
     borderRadius: 10,
     overflow: 'hidden',
     position: 'relative',
@@ -83,32 +97,32 @@ const globalStyles = StyleSheet.create({
 
   /* 🔲 Overlay */
   overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black overlay
+    padding: 10,
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 12,
     borderRadius: 10,
   },
 
   /* 🎤 Artist Info */
   artistRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between', // Space between artist info and actions
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   artistInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   artistName: {
-    color: 'white',
-    fontSize: width * 0.045,
+    color: '#fff', // White text for artist name
+    marginLeft: 8, // Space between icon and text
+    fontSize: 16,
     fontWeight: 'bold',
-    marginLeft: 8,
   },
 
   /* 🎵 Actions */
@@ -117,68 +131,65 @@ const globalStyles = StyleSheet.create({
     alignItems: 'center',
   },
   iconSpacing: {
-    marginRight: 8,
+    marginRight: 8, // Space between action icons
   },
 
   /* 📍 Venue & Genre */
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   venueName: {
-    color: 'white',
-    fontSize: width * 0.04,
-    marginLeft: 8,
+    color: '#fff', // White text for venue name
+    marginLeft: 8, // Space between icon and text
+    fontSize: 14,
     marginTop: 8, // From new styles
     fontWeight: 'bold',
   },
   genre: {
-    color: 'white',
-    fontSize: width * 0.04,
+    color: '#fff', // White text for genre
     marginLeft: 8,
+    fontSize: 14,
   },
 
   /* 🚀 Bottom Container */
   bottomContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Space between play button and price/date
+    alignItems: 'center',
+    marginTop: 8,
     position: 'absolute',
     bottom: 10,
     left: 10,
     right: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
 
   /* 🔴 Play Button */
   playButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 8,
-    borderRadius: 10,
-    alignSelf: 'flex-start',
   },
   playText: {
-    color: 'white',
-    fontSize: width * 0.04,
-    marginLeft: 5,
+    color: 'red', // Red text for play button
+    marginLeft: 4, // Space between icon and text
+    fontSize: 14,
   },
 
   /* 💲 Price & Date */
   priceContainer: {
+    alignItems: 'flex-end', // Align price and date to the right
     alignSelf: 'flex-end',
-    alignItems: 'flex-end',
   },
   price: {
-    color: 'white',
-    fontSize: width * 0.05,
+    color: '#fff', // White text for price
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   date: {
-    color: 'white',
-    fontSize: width * 0.04,
+    color: '#aaa', // Light gray text for date
+    fontSize: 12,
   },
 
   /* 📋 FlatList Content */
