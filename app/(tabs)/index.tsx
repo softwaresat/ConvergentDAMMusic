@@ -6,9 +6,12 @@ import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../hooks/firebase'; // Ensure this import path is correct
+import { useRouter } from 'expo-router'; // Import the useRouter hook
 
 export default function HomeScreen() {
   console.log('🔥 HomeScreen is mounting...');
+
+  const router = useRouter(); // Initialize the router
 
   const [concerts, setConcerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +55,17 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Find performances"
-        placeholderTextColor="#888"
-      />
+      <View style={styles.searchBar}>
+        <MaterialIcons name="search" size={20} color="#888" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Find performances"
+          placeholderTextColor="#888"
+        />
+        <TouchableOpacity onPress={() => router.push('/filter')}> {/* Navigate to filter.tsx */}
+          <MaterialIcons name="tune" size={20} color="#888" style={styles.filterIcon} />
+        </TouchableOpacity>
+      </View>
       
       <FlatList
   data={concerts}
@@ -133,6 +142,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
     fontSize: width * 0.04, // Scales font size dynamically
     color: 'black',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: width * 0.04,
+    color: 'black',
+  },
+  filterIcon: {
+    marginLeft: 8,
   },
   postContainer: {
     margin: 16,

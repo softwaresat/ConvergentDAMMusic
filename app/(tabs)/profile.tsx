@@ -1,147 +1,239 @@
-import React from 'react';
-import { StyleSheet, View, Text, FlatList, ScrollView } from 'react-native';
+import React, { useEffect, useState} from 'react';
+import { Image, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, FlatList, StatusBar, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-
-const posts = [
-  {
-    id: '1',
-    artistName: 'Artist Name',
-    venueName: 'Venue Name',
-    genre: 'Genre',
-    date: 'Fri, March 28th - 6:30 PM',
-    price: 'Price',
-  },
-  {
-    id: '2',
-    artistName: 'Artist Name',
-    venueName: 'Venue Name',
-    genre: 'Genre',
-    date: 'Fri, March 28th - 6:30 PM',
-    price: 'Price',
-  },
-];
+import { ThemedView } from '@/components/ThemedView';
+import { MaterialIcons } from '@expo/vector-icons';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../hooks/firebase'; // Ensure this import path is correct
 
 export default function ProfileScreen() {
+  console.log('🔥 HomeScreen is mounting...');
+
+  const [concerts, setConcerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    console.log('🔄 useEffect is running...');
+
+    const fetchConcerts = async () => {
+      try {
+        console.log('📡 Fetching concerts from Firestore...');
+        
+        const concertsCollection = collection(db, 'concerts');
+        console.log('📁 Collection Reference:', concertsCollection);
+
+        const snapshot = await getDocs(concertsCollection);
+        console.log('📸 Snapshot size:', snapshot.size);
+
+        if (snapshot.empty) {
+          console.warn('⚠️ No concerts found in Firestore.');
+        }
+
+        const data = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        console.log('🎶 Fetched concerts:', JSON.stringify(data, null, 2));
+
+        setConcerts(data);
+      } catch (err) {
+        console.error('❌ Firestore fetch error:', err);
+        setError('Failed to fetch concerts. Check console for details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConcerts();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.header}>
-          <IconSymbol name="account-circle" size={100} color="#808080" />
-          <Text style={styles.name}>Name</Text>
-          <IconSymbol name="menu" size={24} color="#000" style={styles.menuIcon} />
-        </View>
-        <Text style={styles.sectionTitle}>Concerts Attended</Text>
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.postContainer}>
-              <View style={styles.postHeader}>
-                <View style={styles.artistInfo}>
-                  <IconSymbol name="account-circle" size={24} color="#000" />
-                  <Text style={styles.artistName}>{item.artistName}</Text>
-                </View>
-                <View style={styles.postActions}>
-                  <IconSymbol name="share" size={24} color="#000" />
-                  <IconSymbol name="bookmark" size={24} color="#000" />
-                </View>
-              </View>
-              <Text style={styles.venueName}>{item.venueName}</Text>
-              <Text style={styles.genre}>{item.genre}</Text>
-              <View style={styles.postImage}>
-                <IconSymbol name="image" size={48} color="#888" />
-              </View>
-              <View style={styles.postFooter}>
-                <Text style={styles.date}>{item.date}</Text>
-                <Text style={styles.price}>{item.price}</Text>
-              </View>
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Find performances"
+        placeholderTextColor="#888"
+      />
+      
+      <FlatList
+  data={concerts}
+  keyExtractor={(item) => item.id}
+  renderItem={({ item }) => (
+    <ThemedView style={styles.postContainer}>
+      {/* 🎵 Background Image */}
+      <ImageBackground source={{ uri: item.imageUrl }} style={styles.posterImage}>
+        {/* 📍 Concert Info Overlay */}
+        <View style={styles.overlay}>
+
+          {/* 🎤 Artist Info + Actions (Top Left & Right) */}
+          <View style={styles.artistRow}>
+            <View style={styles.artistInfo}>
+              <MaterialIcons name="account-circle" size={20} color="white" />
+              <Text style={styles.artistName}>{item.artistName}</Text>
             </View>
-          )}
-          // Ensure the FlatList is scrollable within the ScrollView
-          scrollEnabled={false}
-          contentContainerStyle={styles.flatListContent}
-        />
-      </ScrollView>
+            <View style={styles.actions}>
+              <MaterialIcons name="ios-share" size={20} color="white" style={styles.iconSpacing} />
+              <MaterialIcons name="bookmark-outline" size={20} color="white" />
+            </View>
+          </View>
+
+          {/* 📍 Venue & Genre Info (Below Artist) */}
+          <View style={styles.infoRow}>
+            <MaterialIcons name="location-on" size={20} color="white" />
+            <Text style={styles.venueName}>{item.venueName}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="music-note" size={20} color="white" />
+            <Text style={styles.genre}>{item.genre}</Text>
+          </View>
+
+          {/* 🚀 Bottom Section - Play Button (Left) & Price/Date (Right) */}
+          <View style={styles.bottomContainer}>
+            {/* 🔴 Play Button (Bottom Left) */}
+            <TouchableOpacity style={styles.playButton}>
+              <MaterialIcons name="play-arrow" size={20} color="red" />
+              <Text style={styles.playText}>Play music demo</Text>
+            </TouchableOpacity>
+
+            {/* 💲 Price & Date (Bottom Right) */}
+            <View style={styles.priceContainer}>
+              <Text style={styles.price}>{item.price}</Text>
+              <Text style={styles.date}>{item.date}</Text>
+            </View>
+          </View>
+
+        </View>
+      </ImageBackground>
+    </ThemedView>
+  )}
+/>
+
+
     </SafeAreaView>
   );
 }
 
+
+import { Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window'); // Get screen width for scaling
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f0f0f0',
   },
-  header: {
-    alignItems: 'center',
-    padding: 16,
-    position: 'relative',
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  menuIcon: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 16,
-    marginTop: 16,
+  searchBar: {
+    margin: 16,
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: '#e0e0e0',
+    fontSize: width * 0.04, // Scales font size dynamically
+    color: 'black',
   },
   postContainer: {
     margin: 16,
-    padding: 16,
     borderRadius: 10,
-    backgroundColor: '#f0f0f0',
+    overflow: 'hidden',
   },
-  postHeader: {
+  posterImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark overlay
+    padding: 12,
+    borderRadius: 10,
+  },
+  /* 🎤 Artist Row (Top Left & Right) */
+  artistRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between', // Pushes actions to the right
+    marginBottom: 5,
   },
   artistInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   artistName: {
-    marginLeft: 8,
+    color: 'white',
+    fontSize: width * 0.045, // Scaled font size
     fontWeight: 'bold',
+    marginLeft: 8,
   },
-  postActions: {
+  /* 🎵 Icons on Right Side */
+  actions: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  iconSpacing: {
+    marginRight: 8, // Space between icons
+  },
+  /* 📍 Venue & Genre Info */
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 3,
   },
   venueName: {
-    marginTop: 8,
-    fontWeight: 'bold',
+    color: 'white',
+    fontSize: width * 0.04, // Scaled font size
+    marginLeft: 8,
   },
   genre: {
-    color: '#888',
+    color: 'white',
+    fontSize: width * 0.04, // Scaled font size
+    marginLeft: 8,
   },
-  postImage: {
-    marginVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#e0e0e0',
-    height: 150,
-    borderRadius: 10,
-  },
-  postFooter: {
+  /* 🚀 Bottom Container (Sticks to Bottom) */
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 10, // Ensures it hugs the bottom
+    left: 10,
+    right: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', // Left = Play button, Right = Price/Date
+    alignItems: 'center',
   },
-  date: {
-    color: '#888',
+  /* 🔴 Play Button (Bottom Left) */
+  playButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 8,
+    borderRadius: 10,
+    alignSelf: 'flex-start', // Sticks to bottom left
+  },
+  playText: {
+    color: 'white',
+    fontSize: width * 0.04, // Scaled font size
+    marginLeft: 5,
+  },
+  /* 💲 Price & Date (Bottom Right) */
+  priceContainer: {
+    alignSelf: 'flex-end', // Align to bottom right
+    alignItems: 'flex-end', // Align text to the right
   },
   price: {
+    color: 'white',
+    fontSize: width * 0.05, // Slightly larger for emphasis
     fontWeight: 'bold',
+    marginBottom: 4, // Adds spacing between price & date
   },
-  flatListContent: {
-    paddingBottom: 16,
+  date: {
+    color: 'white',
+    fontSize: width * 0.04, // Scaled font size
   },
 });
