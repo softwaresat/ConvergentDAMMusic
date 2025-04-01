@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Slider from '@react-native-community/slider';
 import globalStyles from '../styles/globalStyles.js'; // Import global styles
+import { useRouter } from 'expo-router'; // Use useRouter from expo-router
+
+
 
 export default function FilterScreen() {
   const [price, setPrice] = useState(20);
   const [selectedDate, setSelectedDate] = useState('Today');
   const [selectedLocation, setSelectedLocation] = useState('<5 miles');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const router = useRouter(); // Initialize the router
 
   const genres = [
     'Pop', 'Jazz', 'Alternative', 'Country', 'Heavy Metal', 'Rock',
@@ -20,6 +24,28 @@ export default function FilterScreen() {
     setSelectedGenres((prev) =>
       prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
     );
+  };
+
+  const applyFilters = async () => {
+    const queryParams = new URLSearchParams({
+      price: price.toString(),
+      date: selectedDate,
+      location: selectedLocation,
+      genres: selectedGenres.join(','),
+    }).toString();
+
+    try {
+      let response = await fetch(`http://172.18.195.251:3000/concerts?${queryParams}`);
+      let concerts = await response.json();
+
+      // Use router.push to navigate and pass the concerts as a query parameter
+      router.push({
+        pathname: '/',
+        params: { concerts: JSON.stringify(concerts) },
+      });
+    } catch (error) {
+      console.error('Error fetching concerts:', error);
+    }
   };
 
   return (
@@ -106,6 +132,10 @@ export default function FilterScreen() {
           </TouchableOpacity>
         ))}
       </View>
+
+      <TouchableOpacity style={globalStyles.applyButton} onPress={applyFilters}>
+        <Text style={globalStyles.applyButtonText}>Apply Filters</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }

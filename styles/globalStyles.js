@@ -238,6 +238,20 @@ const globalStyles = StyleSheet.create({
   selectedOptionText: {
     color: '#000',
   },
+
+  /* 🔴 Apply Button */
+  applyButton: {
+    backgroundColor: 'red', // Red background for the button
+    borderRadius: 20, // Rounded corners
+    paddingVertical: 12, // Vertical padding for the button
+    alignItems: 'center', // Center the text horizontally
+    marginTop: 16, // Add spacing above the button
+  },
+  applyButtonText: {
+    color: '#fff', // White text color
+    fontSize: 16, // Font size for the text
+    fontWeight: 'bold', // Bold text
+  },
 });
 
 export default globalStyles;

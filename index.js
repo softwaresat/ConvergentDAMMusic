@@ -9,7 +9,8 @@ const { db } = require('./firebaseAdmin'); // Import Firestore instance
 
 const { response } = require('express');
 
-
+const cors = require('cors');
+app.use(cors());
 app.use(express.static('assets'))
 app.use(express.json({
   limit: '50mb'
@@ -63,6 +64,41 @@ app.get('/items', async function (request, response) {
   } catch (error) {
     console.error('Error getting items:', error);
     response.status(500).send('Error getting items');
+  }
+});
+
+// Add /concerts endpoint:
+app.get('/concerts', async function(req, res) {
+  console.log(2)
+  const { price, date, location, genres } = req.query;
+  try {
+    let concertsSnapshot = await db.collection('concerts').get();
+    let concerts = concertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Filter by price if provided (concert.price should be less than or equal)
+    if (price) {
+      const maxPrice = parseInt(price);
+      concerts = concerts.filter(concert => concert.price <= maxPrice);
+    }
+    // Filter by date if provided and not 'Custom'
+    if (date && date !== 'Custom') {
+      concerts = concerts.filter(concert => concert.date === date);
+    }
+    // Filter by location if provided and not 'Custom'
+    if (location && location !== 'Custom') {
+      const maxMiles = parseInt(location.replace('<', '').replace(' miles', ''));
+      concerts = concerts.filter(concert => concert.distance <= maxMiles);
+    }
+    // Filter by genres if provided (assuming concert.genres is an array)
+    if (genres) {
+      const genreArr = genres.split(',');
+      concerts = concerts.filter(concert =>
+        concert.genres && genreArr.some(g => concert.genres.includes(g))
+      );
+    }
+    res.status(200).json(concerts);
+  } catch (error) {
+    console.error('Error getting concerts:', error);
+    res.status(500).send('Error getting concerts');
   }
 });
 
