@@ -1,51 +1,44 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
-
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+        tabBarStyle: {
+          backgroundColor: '#000', // Black background for the bottom bar
+          borderTopWidth: 0, // Remove the top border for a cleaner look
+        },
+        tabBarActiveTintColor: '#fff', // White color for active icons
+        tabBarInactiveTintColor: '#888', // Gray color for inactive icons
+        headerShown: false, // Hide the header for all screens
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="index" // Corresponds to app/(tabs)/index.tsx
         options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="home" color={color} size={size} />
+          ),
           title: 'Home',
-          tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="bookmarks"
+        name="bookmarks" // Corresponds to app/(tabs)/bookmarks.tsx
         options={{
-          title: 'Map',
-          tabBarIcon: ({ color }) => <MaterialIcons name="map" size={28} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="map" color={color} size={size} />
+          ),
+          title: 'Explore',
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile" // Corresponds to app/(tabs)/profile.tsx
         options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="person" color={color} size={size} />
+          ),
           title: 'Profile',
-          tabBarIcon: ({ color }) => <MaterialIcons name="account-circle" size={28} color={color} />,
         }}
       />
     </Tabs>

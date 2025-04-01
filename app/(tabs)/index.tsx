@@ -64,7 +64,9 @@ export default function HomeScreen() {
           placeholder="Find performances"
           placeholderTextColor="#888"
         />
-        <TouchableOpacity onPress={() => router.push('/filter')}> {/* Navigate to filter.tsx */}
+        <TouchableOpacity onPress={() => {
+          router.push('/bookmarks')
+          }}> {/* Navigate to filter.tsx */}
           <MaterialIcons name="tune" size={20} color="#888" style={globalStyles.filterIcon} />
         </TouchableOpacity>
       </View>

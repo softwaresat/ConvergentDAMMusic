@@ -54,6 +54,8 @@ const globalStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 16,
     marginTop: 16,
+    color: '#fff', // White text for dark background
+    marginBottom: 8,
   },
 
   /* 🧾 Post Container */
@@ -195,6 +197,46 @@ const globalStyles = StyleSheet.create({
   /* 📋 FlatList Content */
   flatListContent: {
     paddingBottom: 16,
+  },
+
+  /* 🔲 Filter Screen Styles */
+  filterContainer: {
+    flex: 1,
+    backgroundColor: '#000', // Set to black for better contrast
+    padding: 16,
+  },
+  priceText: {
+    fontSize: 16,
+    color: '#fff', // White text for dark background
+    marginBottom: 16,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+    marginBottom: 16,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  optionButton: {
+    borderWidth: 1,
+    borderColor: '#fff',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    margin: 4, // Use margin for spacing between buttons
+  },
+  optionText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  selectedOption: {
+    backgroundColor: '#fff',
+  },
+  selectedOptionText: {
+    color: '#000',
   },
 });
 
