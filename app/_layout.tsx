@@ -25,18 +25,14 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
-
-
-export default function Layout() {
+  
+  // Added return for the navigation stack
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="filter" options={{ title: 'Filter' }} />
-        <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-
+    <Stack
+      screenOptions={{
+        headerShown: false, // Disable the header globally
+      }}
+    />
   );
 }
+

@@ -25,7 +25,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="bookmarks" // Corresponds to app/(tabs)/bookmarks.tsx
+        name="map" // Corresponds to app/(tabs)/map.tsx
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="map" color={color} size={size} />

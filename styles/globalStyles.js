@@ -256,6 +256,7 @@ const globalStyles = StyleSheet.create({
     color: '#fff', // White text color
     fontSize: 16, // Font size for the text
     fontWeight: 'bold', // Bold text
+  }, // Missing closing brace added here
   /* 📸 Blurred Header Image */
   blurredWrapper: {
     width: '100%',

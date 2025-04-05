@@ -1,22 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Image, TouchableOpacity, ImageBackground } from 'react-native';
 import { View, Text, StyleSheet, Dimensions, FlatList, StatusBar, TextInput, ActivityIndicator } from 'react-native';
-import {
-  ImageBackground,
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../hooks/firebase'; // Ensure this import path is correct
 import { useRouter, useLocalSearchParams } from 'expo-router'; // Import the useRouter and useLocalSearchParams hooks
 import globalStyles from '../../styles/globalStyles'; // adjust path as needed
+import { ThemedView } from '../../components/ThemedView'; // added missing import
 
 export default function HomeScreen() {
   console.log('🔥 HomeScreen is mounting...');
@@ -154,10 +145,9 @@ export default function HomeScreen() {
                 </View>
               </ImageBackground>
             </ThemedView>
-          )}
-        />
-      )}
-
+          </TouchableOpacity>
+        )}
+      />
     </SafeAreaView>
   );
 }
