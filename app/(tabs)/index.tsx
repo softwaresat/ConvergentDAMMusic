@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Image, TouchableOpacity, ImageBackground } from 'react-native';
 import { View, Text, StyleSheet, Dimensions, FlatList, StatusBar, TextInput, ActivityIndicator } from 'react-native';
+import {
+  ImageBackground,
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../hooks/firebase'; // Ensure this import path is correct
@@ -14,6 +23,7 @@ export default function HomeScreen() {
 
   const router = useRouter(); // Initialize the router
   const searchParams = useLocalSearchParams(); // Initialize the searchParams
+
 
   const [concerts, setConcerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +64,7 @@ export default function HomeScreen() {
 
       console.log('🎶 Fetched concerts:', JSON.stringify(data, null, 2));
 
+
       setConcerts(data);
     } catch (err) {
       console.error('❌ Firestore fetch error:', err);
@@ -63,9 +74,17 @@ export default function HomeScreen() {
     }
   };
 
-  
+  if (loading) {
+    return (
+      <SafeAreaView style={globalStyles.container}>
+        <ActivityIndicator size="large" color="#fff" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={globalStyles.container}>
+      {/* 🔍 Search and Filter Bar */}
       <View style={globalStyles.searchBar}>
         <MaterialIcons name="search" size={20} color="#888" style={globalStyles.searchIcon} />
         <TextInput
@@ -73,29 +92,27 @@ export default function HomeScreen() {
           placeholder="Find performances"
           placeholderTextColor="#888"
         />
-        <TouchableOpacity onPress={() => {
-          router.push('/filter')
-          }}> {/* Navigate to filter.tsx */}
+
+        <TouchableOpacity onPress={() => router.push('/filter')}>
           <MaterialIcons name="tune" size={20} color="#888" style={globalStyles.filterIcon} />
         </TouchableOpacity>
       </View>
-      
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : error ? (
-        <Text>{error}</Text>
-      ) : (
-        <FlatList
-          data={concerts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ThemedView style={globalStyles.postContainer}>
-              {/* 🎵 Background Image */}
-              <ImageBackground source={{ uri: item.imageUrl }} style={globalStyles.posterImage}>
-                {/* 📍 Concert Info Overlay */}
-                <View style={globalStyles.overlay}>
 
-                  {/* 🎤 Artist Info + Actions (Top Left & Right) */}
+      {/* 🎵 Concert List */}
+      <FlatList
+        data={concerts}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() => {
+              console.log('Navigating to:', `/event/${item.id}`);
+              router.push(`/event/${item.id}`);
+            }}
+          >
+            <ThemedView style={globalStyles.postContainer}>
+              <ImageBackground source={{ uri: item.imageUrl }} style={globalStyles.posterImage}>
+                <View style={globalStyles.overlay}>
+                  {/* 🎤 Artist Row */}
                   <View style={globalStyles.artistRow}>
                     <View style={globalStyles.artistInfo}>
                       <MaterialIcons name="account-circle" size={20} color="white" />
@@ -108,6 +125,7 @@ export default function HomeScreen() {
                   </View>
 
                   {/* 📍 Venue & Genre Info (Below Artist) */}
+
                   <View style={globalStyles.infoRow}>
                     <MaterialIcons name="location-on" size={20} color="white" />
                     <Text style={globalStyles.venueName}>{item.venueName}</Text>
@@ -126,6 +144,7 @@ export default function HomeScreen() {
                     </TouchableOpacity>
 
                     {/* 💲 Price & Date (Bottom Right) */}
+
                     <View style={globalStyles.priceContainer}>
                       <Text style={globalStyles.price}>{item.price}</Text>
                       <Text style={globalStyles.date}>{item.date}</Text>
@@ -138,6 +157,7 @@ export default function HomeScreen() {
           )}
         />
       )}
+
     </SafeAreaView>
   );
 }

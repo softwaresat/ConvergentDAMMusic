@@ -11,26 +11,26 @@ const globalStyles = StyleSheet.create({
 
   /* 🔠 Search Bar */
   searchBar: {
-    flexDirection: 'row', // Align items horizontally
-    alignItems: 'center', // Center items vertically
-    backgroundColor: '#e0e0e0', // Light gray background
-    borderRadius: 20, // Rounded corners
-    paddingHorizontal: 10, // Horizontal padding inside the container
-    margin: 16, // Margin around the search bar
-    height: 40, // Fixed height for the search bar
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    margin: 16,
+    height: 40,
   },
   searchIcon: {
-    color: "black",
-    marginRight: 8, // Space between the search icon and the text input
+    color: 'black',
+    marginRight: 8,
   },
   searchInput: {
-    flex: 1, // Take up remaining space
-    fontSize: 16, // Font size for the input text
-    color: '#000', // Black text color
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
   },
-  filterIcon: { 
-    color: "black",
-    marginLeft: 8, // Space between the text input and the filter icon
+  filterIcon: {
+    color: 'black',
+    marginLeft: 8,
   },
 
   /* 📄 Header Section */
@@ -50,7 +50,8 @@ const globalStyles = StyleSheet.create({
     right: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    color: 'white',
+    fontSize: 20,
     fontWeight: 'bold',
     marginLeft: 16,
     marginTop: 16,
@@ -62,8 +63,8 @@ const globalStyles = StyleSheet.create({
   postContainer: {
     margin: 16,
     borderRadius: 10,
-    overflow: 'hidden', // Ensure content stays within rounded corners
-    backgroundColor: '#1c1c1c', // Dark background for the card
+    overflow: 'hidden',
+    backgroundColor: '#1c1c1c',
   },
   postHeader: {
     flexDirection: 'row',
@@ -90,8 +91,8 @@ const globalStyles = StyleSheet.create({
   /* 🖼️ Poster Image */
   posterImage: {
     width: '100%',
-    height: 200, // Fixed height for the image
-    justifyContent: 'flex-end', // Align overlay content to the bottom
+    height: 200,
+    justifyContent: 'flex-end',
     borderRadius: 10,
     overflow: 'hidden',
     position: 'relative',
@@ -99,7 +100,7 @@ const globalStyles = StyleSheet.create({
 
   /* 🔲 Overlay */
   overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 10,
     position: 'absolute',
     top: 0,
@@ -112,7 +113,7 @@ const globalStyles = StyleSheet.create({
   /* 🎤 Artist Info */
   artistRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Space between artist info and actions
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
@@ -121,8 +122,8 @@ const globalStyles = StyleSheet.create({
     alignItems: 'center',
   },
   artistName: {
-    color: '#fff', // White text for artist name
-    marginLeft: 8, // Space between icon and text
+    color: '#fff',
+    marginLeft: 8,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -133,7 +134,7 @@ const globalStyles = StyleSheet.create({
     alignItems: 'center',
   },
   iconSpacing: {
-    marginRight: 8, // Space between action icons
+    marginRight: 8,
   },
 
   /* 📍 Venue & Genre */
@@ -143,14 +144,14 @@ const globalStyles = StyleSheet.create({
     marginBottom: 4,
   },
   venueName: {
-    color: '#fff', // White text for venue name
-    marginLeft: 8, // Space between icon and text
+    color: '#fff',
+    marginLeft: 8,
     fontSize: 14,
-    marginTop: 8, // From new styles
+    marginTop: 8,
     fontWeight: 'bold',
   },
   genre: {
-    color: '#fff', // White text for genre
+    color: '#fff',
     marginLeft: 8,
     fontSize: 14,
   },
@@ -158,7 +159,7 @@ const globalStyles = StyleSheet.create({
   /* 🚀 Bottom Container */
   bottomContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Space between play button and price/date
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 8,
     position: 'absolute',
@@ -171,26 +172,30 @@ const globalStyles = StyleSheet.create({
   playButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#333',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   playText: {
-    color: 'red', // Red text for play button
-    marginLeft: 4, // Space between icon and text
+    color: 'red',
+    marginLeft: 4,
     fontSize: 14,
   },
 
   /* 💲 Price & Date */
   priceContainer: {
-    alignItems: 'flex-end', // Align price and date to the right
+    alignItems: 'flex-end',
     alignSelf: 'flex-end',
   },
   price: {
-    color: '#fff', // White text for price
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   date: {
-    color: '#aaa', // Light gray text for date
+    color: '#aaa',
     fontSize: 12,
   },
 
@@ -251,6 +256,99 @@ const globalStyles = StyleSheet.create({
     color: '#fff', // White text color
     fontSize: 16, // Font size for the text
     fontWeight: 'bold', // Bold text
+  /* 📸 Blurred Header Image */
+  blurredWrapper: {
+    width: '100%',
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  blurOverlay: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  /* 🧾 Event Details */
+  eventImage: {
+    width: '90%',
+    height: 180,
+    borderRadius: 12,
+    resizeMode: 'cover',
+    alignSelf: 'center', // ✅ Center horizontally
+  },  
+  description: {
+    color: '#ccc',
+    marginBottom: 24,
+  },
+  subheading: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 12,
+  },
+  rowBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#1e1e1e',
+    padding: 12,
+    borderRadius: 10,
+  },
+  iconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoText: {
+    color: 'white',
+    marginLeft: 8,
+  },
+  detailsBox: {
+    backgroundColor: '#1e1e1e',
+    padding: 12,
+    borderRadius: 10,
+  },
+  detailItem: {
+    color: 'white',
+    marginVertical: 4,
+  },
+  rsvpButton: {
+    backgroundColor: '#e63946',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  rsvpText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  fullscreenBackground: {
+    flex: 1,
+  },
+  fullscreenBlurOverlay: {
+    flex: 1,
+    paddingTop: 48, // helps with safe area
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calloutTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 4,
+    color: '#000',
+  },
+  calloutMeta: {
+    color: '#555',
+    fontSize: 13,
   },
 });
 

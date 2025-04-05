@@ -1,26 +1,38 @@
 [
-    {
-        "artistName": "Jenna Hays",
-        "date": "Fri, March 28th - 6:30 PM",
-        "genre": "Indie Pop",
-        "imageUrl": "https://moodycenteratx.com/wp-content/uploads/2022/07/Gensler_RyanGobuty_MoodyCenter_seatingbowl1_large.jpg",
-        "price": "Free",
-        "venueName": "Cactus Cafe"
-    },
-    {
-        "artistName": "Sala 7",
-        "date": "Tues, April 2nd - 8:00 PM",
-        "genre": "Rock",
-        "imageUrl": "https://cdn.evbuc.com/images/963494453/1998312409213/1/logo.20250218-173646",
-        "price": "$5",
-        "venueName": "Saxon Pub"
-    },
-    {
-        "artistName": "Luke Thorton",
-        "date": "Sat, April 5th - 7:00 PM",
-        "genre": "Country",
-        "imageUrl": "https://cdn.canvasrebel.com/wp-content/uploads/2022/08/c-LukeThornton__28062403619160260352600045484186916653770528n_1659067268141.jpeg",
-        "price": "Free",
-        "venueName": "Lemon Lounge"
+  {
+    "artistName": "Jenna Hays",
+    "date": "Fri, March 28th - 6:30 PM",
+    "genre": "Indie Pop",
+    "imageUrl": "https://moodycenteratx.com/wp-content/uploads/2022/07/Gensler_RyanGobuty_MoodyCenter_seatingbowl1_large.jpg",
+    "price": "Free",
+    "venueName": "Cactus Cafe",
+    "location": {
+      "latitude": 30.286362458936807,
+      "longitude": -97.74123604550586
     }
+  },
+  {
+    "artistName": "Sala 7",
+    "date": "Tues, April 2nd - 8:00 PM",
+    "genre": "Rock",
+    "imageUrl": "https://cdn.evbuc.com/images/963494453/1998312409213/1/logo.20250218-173646",
+    "price": "$5",
+    "venueName": "Saxon Pub",
+    "location": {
+      "latitude": 30.204430484636728,
+      "longitude": -97.66887459793807
+    }
+  },
+  {
+    "artistName": "Luke Thorton",
+    "date": "Sat, April 5th - 7:00 PM",
+    "genre": "Country",
+    "imageUrl": "https://cdn.canvasrebel.com/wp-content/uploads/2022/08/c-LukeThornton__28062403619160260352600045484186916653770528n_1659067268141.jpeg",
+    "price": "Free",
+    "venueName": "Midnight Cowboy",
+    "location": {
+      "latitude": 30.267333505271534,
+      "longitude": -97.7402540035372
+    }
+  }
 ]

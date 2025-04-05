@@ -1,17 +1,18 @@
+// app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function TabsLayout() {
+export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: '#000', // Black background for the bottom bar
-          borderTopWidth: 0, // Remove the top border for a cleaner look
+          backgroundColor: '#000',
+          borderTopWidth: 0,
         },
-        tabBarActiveTintColor: '#fff', // White color for active icons
-        tabBarInactiveTintColor: '#888', // Gray color for inactive icons
-        headerShown: false, // Hide the header for all screens
+        tabBarActiveTintColor: '#fff',
+        tabBarInactiveTintColor: '#888',
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -30,6 +31,7 @@ export default function TabsLayout() {
             <MaterialIcons name="map" color={color} size={size} />
           ),
           title: 'Explore',
+
         }}
       />
       <Tabs.Screen
