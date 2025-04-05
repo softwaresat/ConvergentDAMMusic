@@ -89,6 +89,13 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity
+        style={globalStyles.genreButton}
+        onPress={() => router.push('/genres_poll')}
+      >
+        <Text style={globalStyles.genreButtonText}>🎵 Browse Genres</Text>
+      </TouchableOpacity>
+
       {/* 🎵 Concert List */}
       <FlatList
         data={concerts}

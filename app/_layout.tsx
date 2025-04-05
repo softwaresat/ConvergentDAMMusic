@@ -30,7 +30,13 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
+<<<<<<< HEAD
         headerShown: false, // Disable the header globally
+=======
+        headerShown: false,
+        // UNCOMMENT TO HAVE A FADE ANIMATION
+        // animation: 'fade', // Figma-like dissolve transition
+>>>>>>> 5c4a30d (added select genres screen)
       }}
     />
   );

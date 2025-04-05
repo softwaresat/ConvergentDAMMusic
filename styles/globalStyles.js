@@ -6,7 +6,7 @@ const globalStyles = StyleSheet.create({
   /* 🔲 Container */
   container: {
     flex: 1,
-    backgroundColor: '#000', // Black background for the app
+    backgroundColor: '#000',
   },
 
   /* 🔠 Search Bar */
@@ -280,8 +280,8 @@ const globalStyles = StyleSheet.create({
     height: 180,
     borderRadius: 12,
     resizeMode: 'cover',
-    alignSelf: 'center', // ✅ Center horizontally
-  },  
+    alignSelf: 'center',
+  },
   description: {
     color: '#ccc',
     marginBottom: 24,
@@ -329,27 +329,67 @@ const globalStyles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+
+  /* 🗺️ Fullscreen Map Overlay */
   fullscreenBackground: {
     flex: 1,
   },
   fullscreenBlurOverlay: {
     flex: 1,
-    paddingTop: 48, // helps with safe area
+    paddingTop: 48,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  calloutTitle: {
+
+  /* 🎵 Genre Grid */
+  genreGrid: {
+    justifyContent: 'center',
+  },
+  genreTile: {
+    flex: 1,
+    margin: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 100,
+  },
+  selectedGenreTile: {
+    backgroundColor: '#fff',
+  },
+  genreText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  selectedGenreText: {
+    color: '#000', // Now text stays visible on white background
+  },  
+  /* 🎵 Genre Browse Button */
+  genreButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  genreButtonText: {
+    color: '#000',
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 4,
-    color: '#000',
   },
-  calloutMeta: {
-    color: '#555',
-    fontSize: 13,
+  genreTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 16,
   },
 });
 
