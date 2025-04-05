@@ -53,6 +53,9 @@ const globalStyles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
+    marginLeft: 16,
+    marginTop: 16,
+    color: '#fff', // White text for dark background
     marginBottom: 8,
   },
 
@@ -201,6 +204,58 @@ const globalStyles = StyleSheet.create({
     paddingBottom: 16,
   },
 
+  /* 🔲 Filter Screen Styles */
+  filterContainer: {
+    flex: 1,
+    backgroundColor: '#000', // Set to black for better contrast
+    padding: 16,
+  },
+  priceText: {
+    fontSize: 16,
+    color: '#fff', // White text for dark background
+    marginBottom: 16,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+    marginBottom: 16,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  optionButton: {
+    borderWidth: 1,
+    borderColor: '#fff',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    margin: 4, // Use margin for spacing between buttons
+  },
+  optionText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  selectedOption: {
+    backgroundColor: '#fff',
+  },
+  selectedOptionText: {
+    color: '#000',
+  },
+
+  /* 🔴 Apply Button */
+  applyButton: {
+    backgroundColor: 'red', // Red background for the button
+    borderRadius: 20, // Rounded corners
+    paddingVertical: 12, // Vertical padding for the button
+    alignItems: 'center', // Center the text horizontally
+    marginTop: 16, // Add spacing above the button
+  },
+  applyButtonText: {
+    color: '#fff', // White text color
+    fontSize: 16, // Font size for the text
+    fontWeight: 'bold', // Bold text
   /* 📸 Blurred Header Image */
   blurredWrapper: {
     width: '100%',

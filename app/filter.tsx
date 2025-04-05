@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Slider from '@react-native-community/slider';
+import globalStyles from '../styles/globalStyles.js'; // Import global styles
+import { useRouter } from 'expo-router'; // Use useRouter from expo-router
+
+
 
 export default function FilterScreen() {
   const [price, setPrice] = useState(20);
   const [selectedDate, setSelectedDate] = useState('Today');
   const [selectedLocation, setSelectedLocation] = useState('<5 miles');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const router = useRouter(); // Initialize the router
 
   const genres = [
     'Pop', 'Jazz', 'Alternative', 'Country', 'Heavy Metal', 'Rock',
@@ -21,12 +26,34 @@ export default function FilterScreen() {
     );
   };
 
+  const applyFilters = async () => {
+    const queryParams = new URLSearchParams({
+      price: price.toString(),
+      date: selectedDate,
+      location: selectedLocation,
+      genres: selectedGenres.join(','),
+    }).toString();
+
+    try {
+      let response = await fetch(`http://172.18.195.251:3000/concerts?${queryParams}`);
+      let concerts = await response.json();
+
+      // Use router.push to navigate and pass the concerts as a query parameter
+      router.push({
+        pathname: '/',
+        params: { concerts: JSON.stringify(concerts) },
+      });
+    } catch (error) {
+      console.error('Error fetching concerts:', error);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.sectionTitle}>Price</Text>
-      <Text style={styles.priceText}>$0 - ${price}</Text>
+    <ScrollView style={globalStyles.filterContainer}>
+      <Text style={globalStyles.sectionTitle}>Price</Text>
+      <Text style={globalStyles.priceText}>$0 - ${price}</Text>
       <Slider
-        style={styles.slider}
+        style={globalStyles.slider}
         minimumValue={0}
         maximumValue={100}
         step={1}
@@ -37,21 +64,21 @@ export default function FilterScreen() {
         thumbTintColor="#FF0000"
       />
 
-      <Text style={styles.sectionTitle}>Date</Text>
-      <View style={styles.optionsContainer}>
+      <Text style={globalStyles.sectionTitle}>Date</Text>
+      <View style={globalStyles.optionsContainer}>
         {['Today', 'Tomorrow', 'This week', 'Custom'].map((date) => (
           <TouchableOpacity
             key={date}
             style={[
-              styles.optionButton,
-              selectedDate === date && styles.selectedOption,
+              globalStyles.optionButton,
+              selectedDate === date && globalStyles.selectedOption,
             ]}
             onPress={() => setSelectedDate(date)}
           >
             <Text
               style={[
-                styles.optionText,
-                selectedDate === date && styles.selectedOptionText,
+                globalStyles.optionText,
+                selectedDate === date && globalStyles.selectedOptionText,
               ]}
             >
               {date}
@@ -60,21 +87,21 @@ export default function FilterScreen() {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>Location</Text>
-      <View style={styles.optionsContainer}>
+      <Text style={globalStyles.sectionTitle}>Location</Text>
+      <View style={globalStyles.optionsContainer}>
         {['<5 miles', '<10 miles', '<20 miles', 'Custom'].map((location) => (
           <TouchableOpacity
             key={location}
             style={[
-              styles.optionButton,
-              selectedLocation === location && styles.selectedOption,
+              globalStyles.optionButton,
+              selectedLocation === location && globalStyles.selectedOption,
             ]}
             onPress={() => setSelectedLocation(location)}
           >
             <Text
               style={[
-                styles.optionText,
-                selectedLocation === location && styles.selectedOptionText,
+                globalStyles.optionText,
+                selectedLocation === location && globalStyles.selectedOptionText,
               ]}
             >
               {location}
@@ -83,21 +110,21 @@ export default function FilterScreen() {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>Music Genre</Text>
-      <View style={styles.optionsContainer}>
+      <Text style={globalStyles.sectionTitle}>Music Genre</Text>
+      <View style={globalStyles.optionsContainer}>
         {genres.map((genre) => (
           <TouchableOpacity
             key={genre}
             style={[
-              styles.optionButton,
-              selectedGenres.includes(genre) && styles.selectedOption,
+              globalStyles.optionButton,
+              selectedGenres.includes(genre) && globalStyles.selectedOption,
             ]}
             onPress={() => toggleGenre(genre)}
           >
             <Text
               style={[
-                styles.optionText,
-                selectedGenres.includes(genre) && styles.selectedOptionText,
+                globalStyles.optionText,
+                selectedGenres.includes(genre) && globalStyles.selectedOptionText,
               ]}
             >
               {genre}
@@ -105,53 +132,10 @@ export default function FilterScreen() {
           </TouchableOpacity>
         ))}
       </View>
+
+      <TouchableOpacity style={globalStyles.applyButton} onPress={applyFilters}>
+        <Text style={globalStyles.applyButtonText}>Apply Filters</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000', // Set to black for better contrast
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff', // White text for dark background
-    marginBottom: 8,
-  },
-  priceText: {
-    fontSize: 16,
-    color: '#fff', // White text for dark background
-    marginBottom: 16,
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-    marginBottom: 16,
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 16,
-  },
-  optionButton: {
-    borderWidth: 1,
-    borderColor: '#fff',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    margin: 4, // Use margin for spacing between buttons
-  },
-  optionText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  selectedOption: {
-    backgroundColor: '#fff',
-  },
-  selectedOptionText: {
-    color: '#000',
-  },
-});

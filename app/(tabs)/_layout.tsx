@@ -16,30 +16,31 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="index" // Corresponds to app/(tabs)/index.tsx
         options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="home" color={color} size={size} />
+          ),
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home" size={size} color={color} />
-          ),
         }}
       />
       <Tabs.Screen
-        name="map"
+        name="bookmarks" // Corresponds to app/(tabs)/bookmarks.tsx
         options={{
-          title: 'Map',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="map" size={size} color={color} />
+            <MaterialIcons name="map" color={color} size={size} />
           ),
+          title: 'Explore',
+
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile" // Corresponds to app/(tabs)/profile.tsx
         options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="person" color={color} size={size} />
+          ),
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
-          ),
         }}
       />
     </Tabs>
