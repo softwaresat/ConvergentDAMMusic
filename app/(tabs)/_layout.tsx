@@ -25,11 +25,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="bookmarks"
+        name="map"
         options={{
-          title: 'Saved',
+          title: 'Map',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="bookmark" size={size} color={color} />
+            <MaterialIcons name="map" size={size} color={color} />
           ),
         }}
       />

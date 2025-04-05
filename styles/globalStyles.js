@@ -279,7 +279,22 @@ const globalStyles = StyleSheet.create({
   fullscreenBlurOverlay: {
     flex: 1,
     paddingTop: 48, // helps with safe area
-  },  
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calloutTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 4,
+    color: '#000',
+  },
+  calloutMeta: {
+    color: '#555',
+    fontSize: 13,
+  },
 });
 
 export default globalStyles;

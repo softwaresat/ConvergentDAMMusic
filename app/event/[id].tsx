@@ -1,5 +1,4 @@
-// app/event/[id].tsx
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -28,6 +27,7 @@ type Concert = {
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const [event, setEvent] = useState<Concert | null>(null);
 
   useEffect(() => {
@@ -51,7 +51,24 @@ export default function EventDetail() {
     >
       <BlurView intensity={70} tint="dark" style={globalStyles.fullscreenBlurOverlay}>
         <SafeAreaView style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={{ padding: 16 }}>
+          
+          {/* 🔙 Custom Back Button */}
+          <TouchableOpacity
+            onPress={router.back}
+            style={{
+              padding: 12,
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              zIndex: 10,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              borderRadius: 50,
+            }}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+
+          <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 60 }}>
             {/* 📸 Main image with margin */}
             <Image
               source={{ uri: event.imageUrl }}
