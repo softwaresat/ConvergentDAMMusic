@@ -35,8 +35,9 @@ export default function FilterScreen() {
     }).toString();
 
     try {
-      let response = await fetch(`http://172.18.195.251:3000/concerts?${queryParams}`);
+      let response = await fetch(`http://10.0.2.2:3000/concerts?${queryParams}`);
       let concerts = await response.json();
+      console.log(concerts);
 
       // Use router.push to navigate and pass the concerts as a query parameter
       router.push({

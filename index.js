@@ -67,30 +67,34 @@ app.get('/items', async function (request, response) {
 
 // Add /concerts endpoint:
 app.get('/concerts', async function(req, res) {
-  console.log(2)
   const { price, date, location, genres } = req.query;
   try {
     let concertsSnapshot = await db.collection('concerts').get();
     let concerts = concertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     // Filter by price if provided (concert.price should be less than or equal)
-    if (price) {
-      const maxPrice = parseInt(price);
-      concerts = concerts.filter(concert => concert.price <= maxPrice);
-    }
+    // if (price) {
+    //   const maxPrice = parseInt(price);
+    //   console.log(maxPrice)
+    //   concerts = concerts.filter(concert => concert.price <= maxPrice);
+    // }
     // Filter by date if provided and not 'Custom'
-    if (date && date !== 'Custom') {
-      concerts = concerts.filter(concert => concert.date === date);
-    }
+    // if (date && date !== 'Custom') {
+    //   console.log("date")
+    //   concerts = concerts.filter(concert => concert.date === date);
+    // }
     // Filter by location if provided and not 'Custom'
-    if (location && location !== 'Custom') {
-      const maxMiles = parseInt(location.replace('<', '').replace(' miles', ''));
-      concerts = concerts.filter(concert => concert.distance <= maxMiles);
-    }
+    // if (location && location !== 'Custom') {
+    //   console.log("location")
+
+    //   const maxMiles = parseInt(location.replace('<', '').replace(' miles', ''));
+    //   concerts = concerts.filter(concert => concert.distance <= maxMiles);
+    // }
     // Filter by genres if provided (assuming concert.genres is an array)
     if (genres) {
+
       const genreArr = genres.split(',');
       concerts = concerts.filter(concert =>
-        concert.genres && genreArr.some(g => concert.genres.includes(g))
+        concert.genre && genreArr.some(g => concert.genre.includes(g))
       );
     }
     res.status(200).json(concerts);
@@ -100,4 +104,4 @@ app.get('/concerts', async function(req, res) {
   }
 });
 
-app.listen(3000, () => console.log('Server is live on port 3000!'))
+app.listen(3000, '0.0.0.0', () => { console.log("Server is live!") });
