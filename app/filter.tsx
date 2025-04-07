@@ -36,8 +36,7 @@ export default function FilterScreen() {
     }).toString();
 
     try {
-      console.log(`http://${EMULATOR_IP}/concerts?${queryParams}`)
-      let response = await fetch(`http://${EMULATOR_IP}/concerts?${queryParams}`);
+      let response = await fetch(`https://convergentdammusic.onrender.com/concerts?${queryParams}`);
       let concerts = await response.json();
       console.log(concerts);
 
