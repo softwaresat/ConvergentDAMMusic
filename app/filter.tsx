@@ -3,8 +3,9 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Slider from '@react-native-community/slider';
 import globalStyles from '../styles/globalStyles.js'; // Import global styles
 import { useRouter } from 'expo-router'; // Use useRouter from expo-router
+import Constants from 'expo-constants';
 
-
+const EMULATOR_IP = process.env.EXPO_PUBLIC_EMULATOR_IP;
 
 export default function FilterScreen() {
   const [price, setPrice] = useState(20);
@@ -35,7 +36,8 @@ export default function FilterScreen() {
     }).toString();
 
     try {
-      let response = await fetch(`http://10.0.2.2:3000/concerts?${queryParams}`);
+      console.log(`http://${EMULATOR_IP}/concerts?${queryParams}`)
+      let response = await fetch(`http://${EMULATOR_IP}/concerts?${queryParams}`);
       let concerts = await response.json();
       console.log(concerts);
 
