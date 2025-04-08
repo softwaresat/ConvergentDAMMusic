@@ -1,50 +1,127 @@
-# Welcome to your Expo app 👋
+# StageNextDoor - Local Music Discovery App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<p align="center">
+  <img src="assets/images/icon.png" alt="StageNextDoor Logo" width="200"/>
+</p>
 
-## Get started
+StageNextDoor is a mobile application designed to connect music lovers with local artists and performances happening near them. The app helps users discover, explore, and attend concerts and performances in their area, supporting local music scenes and providing artists with a platform to reach new audiences.
 
-1. Install dependencies
+## Features
 
+- **Concert Discovery**: Browse and search for upcoming concerts and performances
+- **Interactive Map**: Explore events geographically with our intuitive map interface
+- **Personalized Recommendations**: Get concert recommendations based on your music preferences
+- **Artist Profiles**: Learn more about performers with detailed profiles and music previews
+- **Genre Filtering**: Find performances by your favorite music genres
+- **Location-Based Search**: Discover concerts within your preferred travel distance
+- **User Accounts**: Create a profile to track your favorite artists and attended concerts
+
+## Tech Stack
+
+- **Frontend**: React Native with Expo
+- **Navigation**: Expo Router (file-based routing)
+- **State Management**: React Context API
+- **Styling**: React Native StyleSheet
+- **Backend**: Express.js
+- **Database**: Firebase Firestore
+- **Authentication**: Custom authentication with AsyncStorage
+- **Maps**: React Native Maps
+- **UI Components**: Custom themed components
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v14 or later)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- [Android Studio](https://developer.android.com/studio) (for Android development)
+- [Xcode](https://developer.apple.com/xcode/) (for iOS development, macOS only)
+
+### Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/ConvergentDAMMusic.git
+   cd ConvergentDAMMusic/Convergent_DAM_Music
+   ```
+
+2. Install dependencies
    ```bash
    npm install
    ```
 
-2. Start the app
-
-   ```bash
-    npx expo start
+3. Set up environment variables
+   Create a `.env` file in the project root with the following variables:
+   ```
+   EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+   EXPO_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+   EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
+   OPENCAGE_API_KEY=your_opencage_api_key
    ```
 
-In the output, you'll find options to open the app in a
+4. Start the development server
+   ```bash
+   npx expo start
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Running the Backend
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+The app includes a backend server for API endpoints. To run it:
 
 ```bash
-npm run reset-project
+node index.js
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The server will start on port 3000.
 
-## Learn more
+## Project Structure
 
-To learn more about developing your project with Expo, look at the following resources:
+- `app/` - Main application code using Expo Router
+  - `(tabs)/` - Tab-based navigation screens
+  - `event/` - Event detail pages
+  - `_layout.tsx` - Root layout with authentication logic
+- `components/` - Reusable UI components
+- `hooks/` - Custom React hooks including Firebase integration
+- `styles/` - Global styling definitions
+- `assets/` - Images, fonts, and other static assets
+- `lib/` - Utility functions and helpers
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Authentication Flow
 
-## Join the community
+The app uses a custom authentication system with AsyncStorage for token management:
 
-Join our community of developers creating universal apps.
+1. User signs up or logs in via dedicated screens
+2. User data and authentication token are stored in AsyncStorage
+3. The AuthProvider in `_layout.tsx` checks authentication status
+4. Protected routes redirect unauthenticated users to the login screen
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Data Management
+
+Concert data is stored in Firebase Firestore. The app includes:
+
+- A sample concert dataset in `concerts.json`
+- A seeding script (`seedConcerts.js`) to populate the database
+- API endpoints for filtered queries
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Developed as part of the Convergent DAM Music project
+- UI design inspired by modern music streaming platforms
+- Thanks to all contributors and testers
