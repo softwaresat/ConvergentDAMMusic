@@ -35,38 +35,92 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
     
-    // Sign in with Firebase Admin SDK
-    const userRecord = await admin.auth().getUserByEmail(email);
+    // Query Firestore users collection for the user with matching email
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('email', '==', email).get();
     
-    // Get user data from Firestore
-    const userDoc = await db.collection('users').doc(userRecord.uid).get();
-    let userData = { email: userRecord.email };
-    
-    if (userDoc.exists) {
-      userData = { ...userData, ...userDoc.data() };
+    if (snapshot.empty) {
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
     
-    // Create a custom token for the client
-    const token = await admin.auth().createCustomToken(userRecord.uid);
+    // Get user data
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
     
-    // Send response with user data and token
+    // Check if passwords match (in a real app, use bcrypt to compare hashed passwords)
+    if (userData.password !== password) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    
+    // Generate a simple token
+    const token = Buffer.from(`${userDoc.id}:${Date.now()}`).toString('base64');
+    
+    // Send response without sending the password back
+    const { password: _, ...userDataWithoutPassword } = userData;
+    
     res.status(200).json({ 
       message: 'Login successful', 
       user: {
-        id: userRecord.uid,
-        email: userRecord.email,
-        username: userData.username || userRecord.displayName,
+        id: userDoc.id,
+        ...userDataWithoutPassword,
         token
       }
     });
   } catch (error) {
     console.error('Login error:', error);
-    
-    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    res.status(500).json({ message: 'Authentication failed', error: error.message });
+  }
+});
+
+app.post('/signup', async (req, res) => {
+  const { username, email, password } = req.body;
+  
+  try {
+    // Validate required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Username, email and password are required' });
     }
     
-    res.status(500).json({ message: 'Authentication failed', error: error.message });
+    // Check if email already exists
+    const usersRef = db.collection('users');
+    const existingUser = await usersRef.where('email', '==', email).get();
+    
+    if (!existingUser.empty) {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
+    
+    // Create new user document in Firestore
+    const newUserRef = await usersRef.add({
+      username,
+      email,
+      password, // In a production app, hash this password
+      createdAt: new Date(),
+      attendedConcerts: [],
+      favoriteGenres: [],
+      savedConcerts: []
+    });
+    
+    // Generate a simple token
+    const token = Buffer.from(`${newUserRef.id}:${Date.now()}`).toString('base64');
+    
+    // Get the created user
+    const newUserDoc = await newUserRef.get();
+    const userData = newUserDoc.data();
+    
+    // Remove password from response
+    const { password: _, ...userDataWithoutPassword } = userData;
+    
+    res.status(201).json({
+      message: 'User created successfully',
+      user: {
+        id: newUserRef.id,
+        ...userDataWithoutPassword,
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Failed to create user', error: error.message });
   }
 });
 

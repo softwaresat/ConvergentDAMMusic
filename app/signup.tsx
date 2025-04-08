@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth, db } from '../hooks/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 
 export default function SignupScreen() {
   const [username, setUsername] = useState('');
@@ -38,55 +35,39 @@ export default function SignupScreen() {
     setLoading(true);
 
     try {
-      // Create user with Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Use the server endpoint for signup
+      const response = await fetch('https://convergentdammusic.onrender.com/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await response.json();
       
-      // Update user profile with username
-      await updateProfile(user, { displayName: username });
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
+      }
       
-      // Store user data in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        username,
-        email,
-        createdAt: new Date(),
+      // Store user data in AsyncStorage for persistence
+      await AsyncStorage.setItem('userToken', data.user.token);
+      await AsyncStorage.setItem('userData', JSON.stringify({
+        uid: data.user.id,
+        email: data.user.email,
+        displayName: username,
         attendedConcerts: [],
         favoriteGenres: [],
         savedConcerts: []
-      });
-      
-      // Store user data in AsyncStorage for persistence
-      await AsyncStorage.setItem('userToken', await user.getIdToken());
-      await AsyncStorage.setItem('userData', JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-        displayName: username
       }));
       
       // Navigate to the home page
       router.replace('/');
     } catch (error) {
       console.error('Signup error:', error);
-      setError(getAuthErrorMessage(error.code));
+      setError(error.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getAuthErrorMessage = (errorCode) => {
-    switch (errorCode) {
-      case 'auth/email-already-in-use':
-        return 'This email is already associated with an account';
-      case 'auth/invalid-email':
-        return 'Invalid email address format';
-      case 'auth/operation-not-allowed':
-        return 'Email/password accounts are not enabled';
-      case 'auth/weak-password':
-        return 'Password is too weak. Please use at least 6 characters';
-      case 'auth/network-request-failed':
-        return 'Network error. Please check your internet connection';
-      default:
-        return `Signup failed: ${errorCode || 'Unknown error'}`;
     }
   };
 

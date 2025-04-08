@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth } from '../hooks/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -22,7 +20,7 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      // Use your custom login endpoint instead of Firebase Auth directly
+      // Use the server endpoint for login that queries Firestore users collection
       const response = await fetch('https://convergentdammusic.onrender.com/login', {
         method: 'POST',
         headers: {
@@ -38,39 +36,23 @@ export default function LoginScreen() {
       }
       
       // Store user data in AsyncStorage
-      await AsyncStorage.setItem('userToken', data.user.token || 'token');
+      await AsyncStorage.setItem('userToken', data.user.token || '');
       await AsyncStorage.setItem('userData', JSON.stringify({
         uid: data.user.id,
         email: data.user.email,
         displayName: data.user.username || email.split('@')[0],
+        attendedConcerts: data.user.attendedConcerts || [],
+        favoriteGenres: data.user.favoriteGenres || [],
+        savedConcerts: data.user.savedConcerts || []
       }));
       
       // Navigate to the home page
       router.replace('/');
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please try again');
+      setError(error.message || 'Login failed. Please check your credentials and try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getAuthErrorMessage = (errorCode) => {
-    switch (errorCode) {
-      case 'auth/invalid-email':
-        return 'Invalid email address format';
-      case 'auth/user-disabled':
-        return 'This account has been disabled';
-      case 'auth/user-not-found':
-        return 'No account found with this email';
-      case 'auth/wrong-password':
-        return 'Incorrect password';
-      case 'auth/too-many-requests':
-        return 'Too many failed login attempts. Try again later';
-      case 'auth/invalid-credential':
-        return 'Invalid email or password. Please check your credentials and try again';
-      default:
-        return 'Login failed. Please try again';
     }
   };
 
