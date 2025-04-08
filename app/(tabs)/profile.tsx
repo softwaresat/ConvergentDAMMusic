@@ -5,14 +5,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../../hooks/firebase';
-import { signOut } from 'firebase/auth';
+import { db } from '../../hooks/firebase';
+import { useAuth } from '../_layout';
 import globalStyles from '../../styles/globalStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { setUser } = useAuth();
   const [concerts, setConcerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,47 +33,23 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       
-      // Get current user
-      const currentUser = auth.currentUser;
+      // Get user data from AsyncStorage
+      const userDataStr = await AsyncStorage.getItem('userData');
       
-      if (currentUser) {
-        // Get user data from Firestore
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        setUserData(userData);
         
-        if (userDoc.exists()) {
-          const userDataFromFirestore = userDoc.data();
-          setUserData({
-            uid: currentUser.uid,
-            displayName: currentUser.displayName || userDataFromFirestore.username,
-            email: currentUser.email,
-            attendedConcerts: userDataFromFirestore.attendedConcerts || [],
-            favoriteGenres: userDataFromFirestore.favoriteGenres || []
-          });
-          
-          // If user has attended concerts, fetch their details
-          if (userDataFromFirestore.attendedConcerts && userDataFromFirestore.attendedConcerts.length > 0) {
-            fetchUserConcerts(userDataFromFirestore.attendedConcerts);
-          } else {
-            setConcerts([]);
-            setLoading(false);
-          }
+        // If user has attended concerts, fetch their details
+        if (userData.attendedConcerts && userData.attendedConcerts.length > 0) {
+          fetchUserConcerts(userData.attendedConcerts);
         } else {
-          // If user document doesn't exist in Firestore
-          setUserData({
-            uid: currentUser.uid,
-            displayName: currentUser.displayName,
-            email: currentUser.email
-          });
+          // Fetch recommended concerts instead
+          fetchConcerts();
           setLoading(false);
         }
       } else {
-        // Fallback to AsyncStorage if user is not available in auth
-        const userDataStr = await AsyncStorage.getItem('userData');
-        if (userDataStr) {
-          setUserData(JSON.parse(userDataStr));
-        }
-        fetchConcerts(); // Fetch all concerts as fallback
+        setLoading(false);
       }
     } catch (err) {
       console.error('Error loading user data:', err);
@@ -128,9 +105,16 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      console.log("Signing out...");
+      
+      // Clear authentication data from AsyncStorage
       await AsyncStorage.removeItem('userToken');
       await AsyncStorage.removeItem('userData');
+      
+      // Update auth context to trigger navigation
+      setUser(null);
+      
+      // Navigate to the login screen
       router.replace('/login');
     } catch (error) {
       console.error('Error logging out:', error);

@@ -6,8 +6,6 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { auth } from '../hooks/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,35 +20,38 @@ function AuthProvider({ children }) {
   const router = useRouter();
   const segments = useSegments();
 
-  // Check if the user is authenticated using Firebase Auth
+  // Check if the user is authenticated using AsyncStorage
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const checkAuthStatus = async () => {
       try {
-        if (firebaseUser) {
+        // Check for userToken and userData in AsyncStorage
+        const userToken = await AsyncStorage.getItem('userToken');
+        const userDataStr = await AsyncStorage.getItem('userData');
+        
+        if (userToken && userDataStr) {
           // User is signed in
-          const userToken = await firebaseUser.getIdToken();
-          await AsyncStorage.setItem('userToken', userToken);
-          
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
-          });
+          const userData = JSON.parse(userDataStr);
+          setUser(userData);
         } else {
-          // User is signed out
-          await AsyncStorage.removeItem('userToken');
-          await AsyncStorage.removeItem('userData');
+          // User is signed out or no data found
           setUser(null);
         }
       } catch (error) {
-        console.error('Auth state change error:', error);
+        console.error('Auth check error:', error);
+        setUser(null);
       } finally {
         setAuthLoaded(true);
       }
-    });
+    };
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+    // Check auth status immediately
+    checkAuthStatus();
+    
+    // Set up listener for auth state changes
+    const authStateListener = setInterval(checkAuthStatus, 2000);
+    
+    // Clean up interval on unmount
+    return () => clearInterval(authStateListener);
   }, []);
 
   // Handle navigation based on authentication status
