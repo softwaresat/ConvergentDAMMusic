@@ -1,6 +1,7 @@
 // firebase.ts
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 
 // Your Firebase config - obtained from the Firebase console (Project settings > General)
 const firebaseConfig = {
@@ -11,11 +12,13 @@ const firebaseConfig = {
     messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
     measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
-  };
+};
   
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // Initialize Firestore
 const db = getFirestore(app);
+// Initialize Firebase Authentication
+const auth = getAuth(app);
 
-export { db }; //Export the Firestore instance for use in your app
+export { db, auth }; // Export both Firestore and Auth instances

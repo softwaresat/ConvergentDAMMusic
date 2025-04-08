@@ -20,10 +20,32 @@ app.use(express.urlencoded({
 
 app.set('trust proxy', true);
 
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
-app.get('/login', function (request, response) {
+app.use(bodyParser.json());
+app.use(cors());
 
-})
+const users = []; // Temporary in-memory storage for users
+
+app.post('/login', (req, res) => {
+  const { username, email, password } = req.body;
+
+  // Check if user already exists
+  const existingUser = users.find(
+    (user) => user.email === email && user.password === password
+  );
+
+  if (existingUser) {
+    res.status(200).json({ message: 'Login successful', user: existingUser });
+  } else {
+    // Add new user to the in-memory storage
+    const newUser = { username, email, password };
+    users.push(newUser);
+    res.status(201).json({ message: 'User registered successfully', user: newUser });
+  }
+});
+
 app.get('/user', async function (request, response) {
     try {
         const itemsSnapshot = await db.collection('users').get();
@@ -72,11 +94,11 @@ app.get('/concerts', async function(req, res) {
     let concertsSnapshot = await db.collection('concerts').get();
     let concerts = concertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     // Filter by price if provided (concert.price should be less than or equal)
-    // if (price) {
-    //   const maxPrice = parseInt(price);
-    //   console.log(maxPrice)
-    //   concerts = concerts.filter(concert => concert.price <= maxPrice);
-    // }
+    if (price) {
+      const maxPrice = parseInt(price);
+      console.log(maxPrice)
+      concerts = concerts.filter(concert => concert.price <= maxPrice);
+    }
     // Filter by date if provided and not 'Custom'
     // if (date && date !== 'Custom') {
     //   console.log("date")

@@ -5,7 +5,6 @@ import globalStyles from '../styles/globalStyles.js'; // Import global styles
 import { useRouter } from 'expo-router'; // Use useRouter from expo-router
 import Constants from 'expo-constants';
 
-const EMULATOR_IP = process.env.EXPO_PUBLIC_EMULATOR_IP;
 
 export default function FilterScreen() {
   const [price, setPrice] = useState(20);
