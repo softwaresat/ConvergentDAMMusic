@@ -22,23 +22,34 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      // Sign in with Firebase Authentication
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Use your custom login endpoint instead of Firebase Auth directly
+      const response = await fetch('https://convergentdammusic.onrender.com/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
       
-      // Store user data in AsyncStorage for persistence
-      await AsyncStorage.setItem('userToken', await user.getIdToken());
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      // Store user data in AsyncStorage
+      await AsyncStorage.setItem('userToken', data.user.token || 'token');
       await AsyncStorage.setItem('userData', JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || email.split('@')[0],
+        uid: data.user.id,
+        email: data.user.email,
+        displayName: data.user.username || email.split('@')[0],
       }));
       
       // Navigate to the home page
       router.replace('/');
     } catch (error) {
       console.error('Login error:', error);
-      setError(getAuthErrorMessage(error.code));
+      setError(error.message || 'Login failed. Please try again');
     } finally {
       setLoading(false);
     }

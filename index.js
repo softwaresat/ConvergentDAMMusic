@@ -26,21 +26,47 @@ app.use(bodyParser.json());
 
 const users = []; // Temporary in-memory storage for users
 
-app.post('/login', (req, res) => {
-  const { username, email, password } = req.body;
-
-  // Check if user already exists
-  const existingUser = users.find(
-    (user) => user.email === email && user.password === password
-  );
-
-  if (existingUser) {
-    res.status(200).json({ message: 'Login successful', user: existingUser });
-  } else {
-    // Add new user to the in-memory storage
-    const newUser = { username, email, password };
-    users.push(newUser);
-    res.status(201).json({ message: 'User registered successfully', user: newUser });
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+    
+    // Sign in with Firebase Admin SDK
+    const userRecord = await admin.auth().getUserByEmail(email);
+    
+    // Get user data from Firestore
+    const userDoc = await db.collection('users').doc(userRecord.uid).get();
+    let userData = { email: userRecord.email };
+    
+    if (userDoc.exists) {
+      userData = { ...userData, ...userDoc.data() };
+    }
+    
+    // Create a custom token for the client
+    const token = await admin.auth().createCustomToken(userRecord.uid);
+    
+    // Send response with user data and token
+    res.status(200).json({ 
+      message: 'Login successful', 
+      user: {
+        id: userRecord.uid,
+        email: userRecord.email,
+        username: userData.username || userRecord.displayName,
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    
+    res.status(500).json({ message: 'Authentication failed', error: error.message });
   }
 });
 
