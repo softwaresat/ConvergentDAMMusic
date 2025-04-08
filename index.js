@@ -21,10 +21,8 @@ app.use(express.urlencoded({
 app.set('trust proxy', true);
 
 const bodyParser = require('body-parser');
-const cors = require('cors');
 
 app.use(bodyParser.json());
-app.use(cors());
 
 const users = []; // Temporary in-memory storage for users
 
