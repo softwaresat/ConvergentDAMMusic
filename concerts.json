@@ -1,38 +1,242 @@
 [
   {
-    "artistName": "Jenna Hays",
-    "date": "Fri, March 28th - 6:30 PM",
-    "genre": "Indie Pop",
-    "imageUrl": "https://moodycenteratx.com/wp-content/uploads/2022/07/Gensler_RyanGobuty_MoodyCenter_seatingbowl1_large.jpg",
-    "price": 0,
-    "venueName": "Cactus Cafe",
+    "artistName": "The Blue Echoes",
+    "date": "Mon, April 21st - 7:00 PM",
+    "genre": "Blues Rock",
+    "imageUrl": "https://images.pexels.com/photos/167636/pexels-photo-167636.jpeg?cs=srgb&dl=pexels-thibault-trillet-44912-167636.jpg&fm=jpg",
+    "price": 10,
+    "venueName": "Antone's Nightclub",
     "location": {
-      "latitude": 30.286362458936807,
-      "longitude": -97.74123604550586
+      "latitude": 30.26623,
+      "longitude": -97.73881
     }
   },
   {
-    "artistName": "Sala 7",
-    "date": "Tues, April 2nd - 8:00 PM",
-    "genre": "Rock",
-    "imageUrl": "https://cdn.evbuc.com/images/963494453/1998312409213/1/logo.20250218-173646",
+    "artistName": "Crimson Tide Collective",
+    "date": "Tues, April 22nd - 8:30 PM",
+    "genre": "Indie Folk",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkk4DO8IGYUFnXscnoUErkdxC6uBbAWWZrWg&s",
+    "price": 15,
+    "venueName": "Stubb's Bar-B-Q",
+    "location": {
+      "latitude": 30.26901,
+      "longitude": -97.73604
+    }
+  },
+  {
+    "artistName": "Neon Ghosts",
+    "date": "Wed, April 23rd - 9:00 PM",
+    "genre": "Synthwave",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5wRf32sA0Q09M7AB1o8fdJheSJajT2Hxt7Q&s",
+    "price": 12,
+    "venueName": "Mohawk Austin",
+    "location": {
+      "latitude": 30.27002,
+      "longitude": -97.73658
+    }
+  },
+  {
+    "artistName": "Rusty Strings Trio",
+    "date": "Thurs, April 24th - 6:00 PM",
+    "genre": "Americana",
+    "imageUrl": "https://media.istockphoto.com/id/1330424071/photo/large-group-of-people-at-a-concert-party.jpg?s=612x612&w=0&k=20&c=LwdiOCBqbfICjQ3j5AzwyugxmfkbyfL3StKEQhtx4hE=",
+    "price": 8,
+    "venueName": "The Continental Club",
+    "location": {
+      "latitude": 30.25131,
+      "longitude": -97.74955
+    }
+  },
+  {
+    "artistName": "Velvet Thunder",
+    "date": "Fri, April 25th - 9:30 PM",
+    "genre": "Hard Rock",
+    "imageUrl": "https://thumbs.6sqft.com/wp-content/uploads/2021/07/13123945/The-Rooftop-at-Pier-17-concert.jpg?w=1560&format=webp",
+    "price": 25,
+    "venueName": "ACL Live at The Moody Theater",
+    "location": {
+      "latitude": 30.26538,
+      "longitude": -97.74876
+    }
+  },
+  {
+    "artistName": "Luna Bloom",
+    "date": "Sat, April 26th - 8:00 PM",
+    "genre": "Dream Pop",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuA6UQ8uZQYorqLFTKQD8Zk_BNbqd_xwhyfg&s",
+    "price": 18,
+    "venueName": "Emo's Austin",
+    "location": {
+      "latitude": 30.24593,
+      "longitude": -97.73348
+    }
+  },
+  {
+    "artistName": "The Groove Merchants",
+    "date": "Sun, April 27th - 5:00 PM",
+    "genre": "Funk",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvejgTfU5zEgMGwoS9Dd9r47tJShK2EyWOJw&s",
+    "price": 10,
+    "venueName": "The Parish",
+    "location": {
+      "latitude": 30.26745,
+      "longitude": -97.74037
+    }
+  },
+  {
+    "artistName": "Silver Linings Band",
+    "date": "Mon, April 28th - 7:30 PM",
+    "genre": "Alternative Rock",
+    "imageUrl": "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
     "price": 5,
-    "venueName": "Saxon Pub",
+    "venueName": "Scoot Inn",
     "location": {
-      "latitude": 30.204430484636728,
-      "longitude": -97.66887459793807
+      "latitude": 30.26081,
+      "longitude": -97.72900
     }
   },
   {
-    "artistName": "Luke Thorton",
-    "date": "Sat, April 5th - 7:00 PM",
-    "genre": "Country",
-    "imageUrl": "https://cdn.canvasrebel.com/wp-content/uploads/2022/08/c-LukeThornton__28062403619160260352600045484186916653770528n_1659067268141.jpeg",
+    "artistName": "Midnight Howlers",
+    "date": "Tues, April 29th - 10:00 PM",
+    "genre": "Punk Rock",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8x3zRaBMwYJ9AQ9mxk6fdPGXH_MYGcIrWng&s",
     "price": 0,
-    "venueName": "Midnight Cowboy",
+    "venueName": "Elephant Room",
     "location": {
-      "latitude": 30.267333505271534,
-      "longitude": -97.7402540035372
+      "latitude": 30.26509,
+      "longitude": -97.74231
+    }
+  },
+  {
+    "artistName": "Solar Flare Five",
+    "date": "Wed, April 30th - 8:00 PM",
+    "genre": "Jazz Fusion",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToDJuwD4GsiC-5cfdM4V5goXl38v40eLinlj0XV_maAxLuYhppNS0gMifc-mvRJj1ZVbQ&usqp=CAU",
+    "price": 0,
+    "venueName": "Cheer Up Charlies",
+    "location": {
+      "latitude": 30.26967,
+      "longitude": -97.73636
+    }
+  },
+  {
+    "artistName": "Whispering Pines",
+    "date": "Thurs, May 1st - 7:00 PM",
+    "genre": "Acoustic Folk",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYZ9-agavPnz6Lmd5e3ihUvyRBgg1y1-ITuQ&s",
+    "price": 5,
+    "venueName": "Hole in the Wall",
+    "location": {
+      "latitude": 30.28971,
+      "longitude": -97.74193
+    }
+  },
+  {
+    "artistName": "Electric Zephyr",
+    "date": "Fri, May 2nd - 10:30 PM",
+    "genre": "Psychedelic Rock",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjOI5sPop3g0LXqlbi_bVDLV1INoLtRPB2hw&s",
+    "price": 7,
+    "venueName": "Sam's Town Point",
+    "location": {
+      "latitude": 30.18285,
+      "longitude": -97.80589
+    }
+  },
+  {
+    "artistName": "Diamond Dust Diva",
+    "date": "Sat, May 3rd - 9:00 PM",
+    "genre": "Pop Soul",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUfpNxpIZPwsEbMWsKx-skIx-l0yj0dfJ6JA&s",
+    "price": 10,
+    "venueName": "Far Out Lounge & Stage",
+    "location": {
+      "latitude": 30.18447,
+      "longitude": -97.78983
+    }
+  },
+  {
+    "artistName": "The River Rogues",
+    "date": "Sun, May 4th - 6:30 PM",
+    "genre": "Bluegrass",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMK1h9PEKYePj8Kjv3iSZ1vKkNUIvbpprnXw&s",
+    "price": 0,
+    "venueName": "Radio Coffee & Beer",
+    "location": {
+      "latitude": 30.23070,
+      "longitude": -97.77681
+    }
+  },
+  {
+    "artistName": "Amber Waves",
+    "date": "Mon, May 5th - 8:00 PM",
+    "genre": "Country Rock",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS52iJGzdh1TbL068gAk8Js3O3-EWxX9FaEgQ&s",
+    "price": 8,
+    "venueName": "The Ballroom",
+    "location": {
+      "latitude": 30.29400,
+      "longitude": -97.74000
+    }
+  },
+  {
+    "artistName": "Concrete Jungle Beats",
+    "date": "Tues, May 6th - 7:00 PM",
+    "genre": "Hip Hop",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8lVpisLiBxFKPf5rnvgJnwOMlbky_v634tA&s",
+    "price": 10,
+    "venueName": "Hotel Vegas",
+    "location": {
+      "latitude": 30.26274,
+      "longitude": -97.72627
+    }
+  },
+  {
+    "artistName": "Shadow Play Ensemble",
+    "date": "Wed, May 7th - 9:00 PM",
+    "genre": "Experimental",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaxT6kWuyGCIVkmwGuNlKlp_orP4Yq3Azhvg&s",
+    "price": 0,
+    "venueName": "The White Horse",
+    "location": {
+      "latitude": 30.25982,
+      "longitude": -97.72439
+    }
+  },
+  {
+    "artistName": "Golden Hour Quartet",
+    "date": "Thurs, May 8th - 8:30 PM",
+    "genre": "Smooth Jazz",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRw6kKbljo3Bjff_f94iioYRNeAlAZOyvmHuA&s",
+    "price": 15,
+    "venueName": "Empire Control Room & Garage",
+    "location": {
+      "latitude": 30.26706,
+      "longitude": -97.73564
+    }
+  },
+  {
+    "artistName": "Crimson Keys",
+    "date": "Fri, May 9th - 11:00 PM",
+    "genre": "Piano Rock",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQh25zMOQJiVGV3roi3j_PKhZc1M-fQe0Qy2Q&s",
+    "price": 0,
+    "venueName": "Geraldine's",
+    "location": {
+      "latitude": 30.26000,
+      "longitude": -97.73859
+    }
+  },
+  {
+    "artistName": "Static Bloom",
+    "date": "Sat, May 10th - 8:00 PM",
+    "genre": "Shoegaze",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6gQCBgwcQWPW8CWpp2T1WTTUr9jXjJjH62A&s",
+    "price": 5,
+    "venueName": "C-Boy's Heart & Soul",
+    "location": {
+      "latitude": 30.24451,
+      "longitude": -97.75330
     }
   }
 ]

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, setDoc, getFirestore } from 'firebase/firestore';
+import { auth } from '../hooks/firebase';
 
 export default function SignupScreen() {
   const [username, setUsername] = useState('');
@@ -11,12 +13,51 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const db = getFirestore();
+
+  // Function to create a proper Firestore document for the user
+  const createFirestoreUserDocument = async (userId, userEmail, displayName) => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn("Cannot create user document: No authenticated user");
+        return false;
+      }
+
+      await currentUser.getIdToken(true);
+
+      const userDocRef = doc(db, "users", userId);
+
+      await setDoc(userDocRef, {
+        uid: userId,
+        email: userEmail,
+        username: displayName,
+        displayName: displayName,
+        favoriteGenres: [],
+        attendedConcerts: [],
+        savedConcerts: [],
+        createdAt: new Date().toISOString(),
+        bio: "",
+        followers: 0,
+        following: [],
+        location: {
+          city: "",
+          state: ""
+        },
+        profileImageUrl: "",
+        lastLogin: new Date().toISOString()
+      }, { merge: true });
+
+      console.log("Created Firestore document for new user:", userId);
+      return true;
+    } catch (error) {
+      console.error("Error creating Firestore document:", error);
+      return false;
+    }
+  };
 
   const handleSignup = async () => {
-    // Clear previous errors
-    setError('');
-    
-    // Validate inputs
+    // Input validation
     if (!username || !email || !password) {
       setError('All fields are required');
       return;
@@ -33,38 +74,117 @@ export default function SignupScreen() {
     }
 
     setLoading(true);
+    setError('');
 
     try {
-      // Use the server endpoint for signup
-      const response = await fetch('https://convergentdammusic.onrender.com/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const data = await response.json();
+      // We'll use Promise.race to manage timeout and retries behind the scenes
+      const makeRequest = async () => {
+        try {
+          const response = await fetch('https://convergentdammusic.onrender.com/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, email, password }),
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            // Handle the case where email already exists
+            if (data.message && data.message.includes('email already in use') || 
+                data.message && data.message.includes('already exists') ||
+                response.status === 409) {
+              throw { type: 'exist', message: "This email is already registered." };
+            }
+            throw new Error(data.message || 'Signup failed');
+          }
+          
+          return data;
+        } catch (error) {
+          if (error.type === 'exist') {
+            throw error; // Re-throw account exists error
+          }
+          throw new Error('Request failed');
+        }
+      };
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Signup failed');
+      // Create a timeout promise
+      const timeout = (ms) => new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), ms)
+      );
+      
+      // Try multiple times with increasing timeouts
+      let lastError = null;
+      const timeouts = [15000, 25000, 40000]; // Progressive timeouts
+      
+      for (let i = 0; i < timeouts.length; i++) {
+        try {
+          // Race between the request and the timeout
+          const data = await Promise.race([
+            makeRequest(),
+            timeout(timeouts[i])
+          ]);
+          
+          // If we get here, the request succeeded
+          
+          // Create a complete user data object
+          const userDataObj = {
+            uid: data.user.id,
+            email: data.user.email,
+            displayName: username,
+            attendedConcerts: [],
+            favoriteGenres: [],
+            savedConcerts: []
+          };
+          
+          // Save user data to AsyncStorage
+          await Promise.all([
+            AsyncStorage.setItem('userToken', data.user.token || ''),
+            AsyncStorage.setItem('userData', JSON.stringify(userDataObj)),
+            AsyncStorage.setItem('fromSignup', 'true')
+          ]);
+          
+          // Create the user document in Firestore with proper structure
+          await createFirestoreUserDocument(data.user.id, data.user.email, username);
+          
+          // Navigate directly to the genres page WITHOUT showing the success screen
+          router.replace({
+            pathname: '/(tabs)/genres_poll',
+            params: { 
+              fastLoad: 'true' 
+            }
+          });
+          
+          return;
+        } catch (error) {
+          if (error.type === 'exist') {
+            // Handle existing account case
+            Alert.alert(
+              "Account Already Exists",
+              "This email is already registered. Would you like to login instead?",
+              [
+                {
+                  text: "Go to Login",
+                  onPress: () => router.push('/login')
+                },
+                {
+                  text: "Cancel",
+                  style: "cancel"
+                }
+              ]
+            );
+            return;
+          }
+          // Store the error but keep trying if we haven't exhausted all timeouts
+          lastError = error;
+        }
       }
       
-      // Store user data in AsyncStorage for persistence
-      await AsyncStorage.setItem('userToken', data.user.token);
-      await AsyncStorage.setItem('userData', JSON.stringify({
-        uid: data.user.id,
-        email: data.user.email,
-        displayName: username,
-        attendedConcerts: [],
-        favoriteGenres: [],
-        savedConcerts: []
-      }));
+      // If we get here, all attempts failed
+      throw new Error('The server is taking too long to respond. Please try again later.');
       
-      // Navigate to the home page
-      router.replace('/');
     } catch (error) {
-      console.error('Signup error:', error);
       setError(error.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
@@ -77,69 +197,74 @@ export default function SignupScreen() {
       <Text style={styles.title}>Welcome to StageNextDoor</Text>
       <Text style={styles.subtitle}>Sign up and join your local music community</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        placeholderTextColor="#888"
-        value={username}
-        onChangeText={(text) => {
-          setUsername(text);
-          setError('');
-        }}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#888"
-        value={email}
-        onChangeText={(text) => {
-          setEmail(text);
-          setError('');
-        }}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#888"
-        value={password}
-        onChangeText={(text) => {
-          setPassword(text);
-          setError('');
-        }}
-        secureTextEntry
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm password"
-        placeholderTextColor="#888"
-        value={confirmPassword}
-        onChangeText={(text) => {
-          setConfirmPassword(text);
-          setError('');
-        }}
-        secureTextEntry
-      />
+      <>
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          placeholderTextColor="#888"
+          value={username}
+          onChangeText={(text) => {
+            setUsername(text);
+            setError('');
+          }}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#888"
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            setError('');
+          }}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#888"
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            setError('');
+          }}
+          secureTextEntry
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm password"
+          placeholderTextColor="#888"
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            setError('');
+          }}
+          secureTextEntry
+        />
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={handleSignup}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text style={styles.buttonText}>Sign Up</Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={handleSignup}
+          disabled={loading}
+        >
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#fff" size="small" />
+              <Text style={styles.loadingText}>Creating account...</Text>
+            </View>
+          ) : (
+            <Text style={styles.buttonText}>Sign Up</Text>
+          )}
+        </TouchableOpacity>
 
-      <Text style={styles.footerText}>
-        Already Have An Account?{' '}
-        <Text style={styles.link} onPress={() => router.push('/login')}>Log In</Text>
-      </Text>
+        <Text style={styles.footerText}>
+          Already Have An Account?{' '}
+          <Text style={styles.link} onPress={() => router.push('/login')}>Log In</Text>
+        </Text>
+      </>
     </View>
   );
 }
@@ -186,10 +311,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 15,
   },
+  continueButton: {
+    backgroundColor: '#4285F4',
+    marginTop: 15,
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    marginLeft: 10,
+    fontSize: 14,
   },
   footerText: {
     color: '#fff',
@@ -202,6 +341,21 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#FF0000',
     marginBottom: 15,
+    textAlign: 'center',
+  },
+  progressText: {
+    color: '#4CAF50',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  completedContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  completedText: {
+    color: '#4CAF50',
+    fontSize: 16,
+    marginBottom: 20,
     textAlign: 'center',
   },
 });

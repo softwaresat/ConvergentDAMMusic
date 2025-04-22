@@ -1,12 +1,12 @@
 const admin = require("firebase-admin");
 
 // Load your Firebase Service Account Key
-const serviceAccount = require("./serviceAccountKey.json");
+const serviceAccount = require("./convergentdammusic-firebase-adminsdk-fbsvc-a29bfeec41.json");
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://convergentdam.firebaseio.com" // Replace with your actual project ID
+  databaseURL: "https://convergentdammusic.firebaseio.com" // Updated to match project ID
 });
 
 // Firestore Database Reference

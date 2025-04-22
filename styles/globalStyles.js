@@ -391,6 +391,93 @@ const globalStyles = StyleSheet.create({
     color: '#fff',
     marginBottom: 16,
   },
+  
+  /* 🔄 Carousel Styles */
+  carouselContainer: {
+    marginBottom: 24,
+  },
+  carouselTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 16,
+    marginBottom: 12,
+  },
+  carouselList: {
+    paddingLeft: 16,
+  },
+  carouselItem: {
+    width: width * 0.75,
+    marginRight: 12,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  carouselImage: {
+    width: '100%',
+    height: 160,
+    justifyContent: 'flex-end',
+  },
+  carouselOverlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  carouselArtistName: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  carouselVenueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  carouselVenueName: {
+    color: '#fff',
+    marginLeft: 6,
+    fontSize: 14,
+  },
+  carouselGenreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  carouselGenre: {
+    color: '#fff',
+    marginLeft: 6,
+    fontSize: 12,
+  },
+
+  /* Filter Indicator Styles */
+  filteredInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#333',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  filteredText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  clearFiltersButton: {
+    backgroundColor: '#FF0000',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  clearFiltersText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
 });
 
 export default globalStyles;

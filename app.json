@@ -19,11 +19,6 @@
       },
       "package": "com.anonymous.ConvergentDAMMusic"
     },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": [
       "expo-router",
       [

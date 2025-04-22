@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ActivityIndicator, SafeAreaView, Text, Image, TouchableOpacity } from 'react-native';
+import { View, ActivityIndicator, SafeAreaView, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import MapView, { Marker, Callout, Region } from 'react-native-maps';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, Firestore } from 'firebase/firestore';
 import { db } from '../../hooks/firebase';
 import globalStyles from '../../styles/globalStyles';
 
@@ -23,11 +23,14 @@ export default function MapScreen() {
   const [concerts, setConcerts] = useState<Concert[]>([]);
   const [loading, setLoading] = useState(true);
   const [region, setRegion] = useState<Region | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const mapRef = useRef<MapView | null>(null);
 
   useEffect(() => {
     const fetchConcerts = async () => {
       try {
+        setError(null);
+        console.log("[Map] Fetching concerts for map...");
         const concertsCollection = collection(db, 'concerts');
         const snapshot = await getDocs(concertsCollection);
 
@@ -63,6 +66,7 @@ export default function MapScreen() {
             typeof c.location.longitude === 'number'
         );
 
+        console.log(`[Map] Found ${validConcerts.length} concerts with valid locations`);
         setConcerts(validConcerts);
 
         if (validConcerts.length > 0) {
@@ -76,6 +80,7 @@ export default function MapScreen() {
         }
       } catch (error) {
         console.error('❌ Error fetching concerts:', error);
+        setError('Failed to load concerts. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -104,6 +109,25 @@ export default function MapScreen() {
       <SafeAreaView style={globalStyles.centered}>
         <ActivityIndicator size="large" />
         <Text style={{ color: 'white' }}>Loading map...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={globalStyles.centered}>
+        <Text style={{ color: 'white', textAlign: 'center', margin: 20 }}>{error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            // Retry fetching concerts
+            fetchConcerts();
+          }}
+        >
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
@@ -145,12 +169,12 @@ export default function MapScreen() {
                   shadowRadius: 4,
                   elevation: 5,
                 }}>
-                  <Image source={{ uri: concert.imageUrl }} style={globalStyles.eventImage} />
+                  <Image source={{ uri: concert.imageUrl }} style={styles.eventImage} />
                   <View style={{ padding: 10 }}>
-                    <Text style={globalStyles.calloutTitle}>
+                    <Text style={styles.calloutTitle}>
                       {concert.artistName} @ {concert.venueName}
                     </Text>
-                    <Text style={globalStyles.calloutMeta}>
+                    <Text style={styles.calloutMeta}>
                       {concert.date} • {concert.genre} • {concert.price}
                     </Text>
                   </View>
@@ -165,7 +189,7 @@ export default function MapScreen() {
       <View
         style={{
           position: 'absolute',
-          bottom: 30, // Adjust if needed to sit above tab bar
+          bottom: 30,
           right: 20,
           backgroundColor: 'rgba(0,0,0,0.6)',
           borderRadius: 8,
@@ -196,3 +220,32 @@ export default function MapScreen() {
     </SafeAreaView>
   );
 }
+
+// Define styles locally to avoid the global styles error
+const styles = StyleSheet.create({
+  eventImage: {
+    width: '100%',
+    height: 140,
+    resizeMode: 'cover',
+  },
+  calloutTitle: {
+    color: 'black',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  calloutMeta: {
+    color: '#666',
+    fontSize: 12,
+  },
+  retryButton: {
+    backgroundColor: '#FF0000',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  retryText: {
+    color: 'white',
+    fontWeight: 'bold',
+  }
+});

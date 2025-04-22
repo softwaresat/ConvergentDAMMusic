@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '../../hooks/firebase';
+import { db, cleanSignOut, auth } from '../../hooks/firebase';
 import { useAuth } from '../_layout';
 import globalStyles from '../../styles/globalStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,6 +17,7 @@ export default function ProfileScreen() {
   const [concerts, setConcerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [userData, setUserData] = useState<{
     uid?: string,
     displayName?: string,
@@ -33,18 +34,51 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       
-      // Get user data from AsyncStorage
+      // Get user data from AsyncStorage first for immediate display
       const userDataStr = await AsyncStorage.getItem('userData');
+      let userData = {};
       
       if (userDataStr) {
-        const userData = JSON.parse(userDataStr);
+        userData = JSON.parse(userDataStr);
         setUserData(userData);
+        
+        // Try to fetch the most up-to-date data from Firestore
+        if (auth.currentUser) {
+          try {
+            const userDocRef = doc(db, "users", auth.currentUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+              // Get the complete document data
+              const firestoreData = userDoc.data();
+              console.log("[Profile] Loaded user data from Firestore:", firestoreData);
+              
+              // Update the userData state with the latest data
+              const mergedData = {
+                ...userData,
+                ...firestoreData,
+                uid: auth.currentUser.uid
+              };
+              
+              // Update state with the merged data
+              setUserData(mergedData);
+              
+              // Save the updated data to AsyncStorage for offline access
+              await AsyncStorage.setItem('userData', JSON.stringify(mergedData));
+            } else {
+              console.log("[Profile] User document doesn't exist in Firestore");
+            }
+          } catch (firestoreErr) {
+            console.error("[Profile] Error fetching user data from Firestore:", firestoreErr);
+            // Continue with local data if Firestore fails
+          }
+        }
         
         // If user has attended concerts, fetch their details
         if (userData.attendedConcerts && userData.attendedConcerts.length > 0) {
           fetchUserConcerts(userData.attendedConcerts);
         } else {
-          // Fetch recommended concerts instead
+          // Fetch bookmarked concerts instead
           fetchConcerts();
           setLoading(false);
         }
@@ -61,12 +95,16 @@ export default function ProfileScreen() {
   const fetchUserConcerts = async (concertIds: string[]) => {
     try {
       const concertData = [];
-      
-      // Fetch each concert by ID
+  
       for (const concertId of concertIds) {
+        if (!concertId || typeof concertId !== 'string') {
+          console.warn('🚫 Skipping invalid concertId:', concertId);
+          continue;
+        }
+  
         const concertRef = doc(db, 'concerts', concertId);
         const concertDoc = await getDoc(concertRef);
-        
+  
         if (concertDoc.exists()) {
           concertData.push({
             id: concertDoc.id,
@@ -74,7 +112,7 @@ export default function ProfileScreen() {
           });
         }
       }
-      
+  
       setConcerts(concertData);
       setLoading(false);
     } catch (err) {
@@ -83,7 +121,7 @@ export default function ProfileScreen() {
       setLoading(false);
     }
   };
-
+  
   const fetchConcerts = async () => {
     try {
       const concertsCollection = collection(db, 'concerts');
@@ -94,7 +132,8 @@ export default function ProfileScreen() {
         ...doc.data(),
       }));
       
-      setConcerts(data);
+      // Only display a subset of concerts to represent bookmarked concerts
+      setConcerts(data.slice(0, 5));
     } catch (err) {
       console.error('Firestore fetch error:', err);
       setError('Failed to fetch concerts');
@@ -105,7 +144,11 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      console.log("Signing out...");
+      setLoggingOut(true);
+      console.log("User initiated logout");
+      
+      // Use the improved clean signout function
+      await cleanSignOut();
       
       // Clear authentication data from AsyncStorage
       await AsyncStorage.removeItem('userToken');
@@ -118,6 +161,8 @@ export default function ProfileScreen() {
       router.replace('/login');
     } catch (error) {
       console.error('Error logging out:', error);
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -130,7 +175,16 @@ export default function ProfileScreen() {
         
         {userData.favoriteGenres && userData.favoriteGenres.length > 0 && (
           <View style={styles.genreContainer}>
-            <Text style={styles.genreTitle}>Favorite Genres:</Text>
+            <View style={styles.genreHeaderRow}>
+              <Text style={styles.genreTitle}>Favorite Genres:</Text>
+              <TouchableOpacity 
+                style={styles.editGenresButton} 
+                onPress={() => router.push('/(tabs)/genres_poll')}
+              >
+                <MaterialIcons name="edit" size={16} color="#4285F4" />
+                <Text style={styles.editGenresText}>Edit</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.genreTags}>
               {userData.favoriteGenres.map(genre => (
                 <View key={genre} style={styles.genreTag}>
@@ -141,15 +195,35 @@ export default function ProfileScreen() {
           </View>
         )}
         
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Log Out</Text>
+        {(!userData.favoriteGenres || userData.favoriteGenres.length === 0) && (
+          <View style={styles.genreContainer}>
+            <Text style={styles.noGenresText}>No favorite genres selected</Text>
+            <TouchableOpacity 
+              style={styles.selectGenresButton} 
+              onPress={() => router.push('/(tabs)/genres_poll')}
+            >
+              <Text style={styles.selectGenresText}>Select Genres</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          onPress={handleLogout}
+          disabled={loggingOut}
+        >
+          {loggingOut ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.logoutButtonText}>Log Out</Text>
+          )}
         </TouchableOpacity>
       </View>
 
       <Text style={globalStyles.sectionTitle}>
         {userData.attendedConcerts && userData.attendedConcerts.length > 0 
           ? 'Concerts Attended' 
-          : 'Recommended Concerts'}
+          : 'Bookmarked Concerts'}
       </Text>
       
       {loading ? (
@@ -250,11 +324,32 @@ const styles = StyleSheet.create({
   genreContainer: {
     marginVertical: 10,
     alignItems: 'center',
+    width: '90%',
+  },
+  genreHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
   },
   genreTitle: {
     color: 'white',
     fontSize: 16,
-    marginBottom: 5,
+  },
+  editGenresButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(66, 133, 244, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+  },
+  editGenresText: {
+    color: '#4285F4',
+    fontSize: 14,
+    marginLeft: 5,
+    fontWeight: '500',
   },
   genreTags: {
     flexDirection: 'row',
@@ -271,6 +366,22 @@ const styles = StyleSheet.create({
   genreText: {
     color: 'white',
     fontSize: 12,
-  }
+  },
+  noGenresText: {
+    color: '#888',
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  selectGenresButton: {
+    backgroundColor: '#4285F4',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  selectGenresText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
 });
 

@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Default rule - deny all
+    match /{allPaths=**} {
+      allow read: if true;  // Allow all users to read music files
+      allow write: if false; // Deny write by default
+    }
+    
+    // Music files - allow authenticated users to upload
+    match /music/{concertId}_{timestamp}.{extension} {
+      allow read: if true; // Anyone can read music files
+      allow write: if request.auth != null; // Only authenticated users can upload
+      allow delete: if request.auth != null; // Only authenticated users can delete
+    }
+  }
+}
