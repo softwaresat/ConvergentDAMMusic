@@ -2,13 +2,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useNavigation, useLocalSearchParams } from 'expo-router';
+import { useRouter, useNavigation, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import globalStyles from '../../styles/globalStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { useSpotify } from '../../hooks/useSpotify';
+import { FontAwesome } from '@expo/vector-icons';
 
-const genres = [
+// Export the genre list so it can be used in other files like useSpotify.tsx
+export const genres = [
   'Pop', 'Jazz', 'Rock', 'Hip-Hop', 'Classical',
   'EDM', 'Country', 'R&B', 'Folk', 'Blues',
   'K-pop', 'Metal', 'Indie', 'Reggae', 'Disco'
@@ -18,6 +21,7 @@ const GenreScreen = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [spotifyLoading, setSpotifyLoading] = useState(false);
   const router = useRouter();
   const navigation = useNavigation();
   const params = useLocalSearchParams();
@@ -25,6 +29,7 @@ const GenreScreen = () => {
   
   const db = getFirestore();
   const auth = getAuth();
+  const spotify = useSpotify();
   
   const [isFromSignup, setIsFromSignup] = useState(false);
 
@@ -67,54 +72,67 @@ const GenreScreen = () => {
     }
   }, [isFromSignup, navigation]);
 
-  useEffect(() => {
-    const loadUserGenres = async () => {
-      try {
-        if (fastLoad && isFromSignup) {
+  // Wrap loadUserGenres in useCallback
+  const loadUserGenres = useCallback(async () => {
+    try {
+      if (fastLoad && isFromSignup) {
+        setInitialLoading(false);
+        return;
+      }
+      
+      setInitialLoading(true); // Show loading indicator while fetching
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData) {
+        const parsedUserData = JSON.parse(userData);
+        
+        if (parsedUserData.favoriteGenres && parsedUserData.favoriteGenres.length > 0) {
+          setSelectedGenres(parsedUserData.favoriteGenres);
           setInitialLoading(false);
           return;
         }
-        
-        const userData = await AsyncStorage.getItem('userData');
-        if (userData) {
-          const parsedUserData = JSON.parse(userData);
-          
-          if (parsedUserData.favoriteGenres && parsedUserData.favoriteGenres.length > 0) {
-            setSelectedGenres(parsedUserData.favoriteGenres);
-            setInitialLoading(false);
-            return;
-          }
-        }
-        
-        if (!isFromSignup) {
-          if (auth.currentUser) {
-            const timeout = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Firestore query timeout')), 2000)
-            );
-            
-            try {
-              const userDocRef = doc(db, "users", auth.currentUser.uid);
-              const firestorePromise = getDoc(userDocRef);
-              
-              const result = await Promise.race([firestorePromise, timeout]);
-              
-              if (result && result.exists() && result.data().favoriteGenres) {
-                setSelectedGenres(result.data().favoriteGenres);
-              }
-            } catch (error) {
-              console.log('Firestore query timed out or failed:', error);
-            }
-          }
-        }
-      } catch (error) {
-        console.log('Error loading user genres:', error);
-      } finally {
-        setInitialLoading(false);
       }
-    };
+      
+      // Only fetch from Firestore if not coming from signup and no data in AsyncStorage
+      if (!isFromSignup && auth.currentUser) {
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Firestore query timeout')), 2000)
+        );
+        
+        try {
+          const userDocRef = doc(db, "users", auth.currentUser.uid);
+          const firestorePromise = getDoc(userDocRef);
+          
+          const result = await Promise.race([firestorePromise, timeout]);
+          
+          if (result && result.exists() && result.data().favoriteGenres) {
+            setSelectedGenres(result.data().favoriteGenres);
+          } else {
+            // If no genres in Firestore, ensure selectedGenres is empty
+            setSelectedGenres([]);
+          }
+        } catch (error) {
+          console.log('Firestore query timed out or failed:', error);
+          setSelectedGenres([]); // Reset genres on error
+        }
+      } else {
+        // If not logged in or coming from signup with no AsyncStorage data, reset genres
+        setSelectedGenres([]);
+      }
+    } catch (error) {
+      console.log('Error loading user genres:', error);
+      setSelectedGenres([]); // Reset genres on error
+    } finally {
+      setInitialLoading(false);
+    }
+  }, [isFromSignup, fastLoad, auth.currentUser, db]); // Add dependencies
 
-    loadUserGenres();
-  }, [isFromSignup, fastLoad, auth.currentUser, db]);
+  // Use useFocusEffect to load genres when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      console.log("[GenreScreen] Screen focused, loading genres...");
+      loadUserGenres();
+    }, [loadUserGenres]) // Dependency array includes the memoized loadUserGenres
+  );
 
   const toggleGenre = useCallback((genre: string) => {
     setSelectedGenres(prev =>
@@ -218,17 +236,85 @@ const GenreScreen = () => {
       
       // Update local storage with UID if needed
       if (userId !== userData.uid && userData.email) {
-        const updatedUserData = await AsyncStorage.getItem('userData');
-        if (updatedUserData) {
-          await AsyncStorage.setItem('userData', JSON.stringify({
-            ...JSON.parse(updatedUserData),
-            uid: userId
-          }));
-          console.log("[Genres] Updated local storage with user ID");
+        const updatedUserData = { ...userData, uid: userId };
+        await AsyncStorage.setItem('userData', JSON.stringify(updatedUserData));
+      }
+      
+    } catch (error) {
+      console.log('Error updating firestore in background:', error);
+    }
+  };
+
+  const getSpotifyGenres = async () => {
+    try {
+      setSpotifyLoading(true);
+      
+      // Get or refresh Spotify token
+      const token = await spotify.login();
+      
+      if (!token) {
+        throw new Error("Failed to authenticate with Spotify");
+      }
+      
+      console.log("[GenreScreen] Successfully authenticated with Spotify");
+      
+      // Fetch top genres
+      const topGenres = await spotify.fetchTopGenres(token);
+      
+      if (topGenres && topGenres.length > 0) {
+        console.log("[GenreScreen] Got top genres from Spotify:", topGenres);
+        
+        // Filter to include only genres that match our available list
+        // and add some fuzzy matching to handle capitalization and formatting differences
+        const filteredGenres = topGenres.filter(spotifyGenre => {
+          // Convert both to lowercase for comparison
+          const normalizedSpotifyGenre = spotifyGenre.toLowerCase();
+          
+          // Try to find a match in our genre list
+          return genres.some(appGenre => {
+            const normalizedAppGenre = appGenre.toLowerCase();
+            
+            // Check if the Spotify genre contains the app genre or vice versa
+            return normalizedSpotifyGenre.includes(normalizedAppGenre) || 
+                   normalizedAppGenre.includes(normalizedSpotifyGenre);
+          });
+        });
+        
+        // If we found matches, use those
+        if (filteredGenres.length > 0) {
+          const matchedGenres = [];
+          
+          // Map filtered genres to exact matches in our app's genre list
+          filteredGenres.forEach(spotifyGenre => {
+            const normalizedSpotifyGenre = spotifyGenre.toLowerCase();
+            
+            genres.forEach(appGenre => {
+              const normalizedAppGenre = appGenre.toLowerCase();
+              
+              if (normalizedSpotifyGenre.includes(normalizedAppGenre) || 
+                  normalizedAppGenre.includes(normalizedSpotifyGenre)) {
+                // Add the appGenre (with proper capitalization) if not already in the list
+                if (!matchedGenres.includes(appGenre)) {
+                  matchedGenres.push(appGenre);
+                }
+              }
+            });
+          });
+          
+          setSelectedGenres(matchedGenres);
+          Alert.alert("Success", "We've selected genres based on your Spotify preferences!");
+        } else {
+          // If no matches found
+          Alert.alert("No matches found", "We couldn't match your Spotify genres with our available genres. Please select manually.");
         }
+      } else {
+        Alert.alert("No genres found", "We couldn't find your top genres on Spotify. Please select manually.");
       }
     } catch (error) {
-      console.log('[Genres] Error updating Firestore:', error);
+      console.error("[GenreScreen] Spotify genre fetch error:", error);
+      Alert.alert("Error", "Failed to get genres from Spotify. Please try again or select manually.");
+    } finally {
+      setSpotifyLoading(false);
     }
   };
 
@@ -253,7 +339,7 @@ const GenreScreen = () => {
       </TouchableOpacity>
     );
   }, [selectedGenres, toggleGenre]);
-
+  
   if (initialLoading) {
     return (
       <SafeAreaView style={globalStyles.container}>
@@ -276,6 +362,24 @@ const GenreScreen = () => {
             ? "These will help us recommend concerts you'll love."
             : "Select the genres you're currently interested in."}
         </Text>
+
+        {!isFromSignup && (
+          <TouchableOpacity 
+            style={styles.spotifyButton}
+            disabled={spotifyLoading}
+            onPress={getSpotifyGenres}
+          >
+            {spotifyLoading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <FontAwesome name="spotify" size={20} color="#1DB954" style={styles.spotifyIcon} />
+                <Text style={styles.spotifyButtonText}>Import from Spotify</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
         <FlatList
           data={genres}
           renderItem={renderItem}
@@ -286,6 +390,12 @@ const GenreScreen = () => {
           scrollEnabled={false} // Disable FlatList scrolling since we're using ScrollView
           removeClippedSubviews={false}
         />
+
+        <View style={styles.countContainer}>
+          <Text style={styles.countText}>
+            {selectedGenres.length} of {genres.length} selected
+          </Text>
+        </View>
       
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
@@ -333,6 +443,34 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  spotifyButton: {
+    backgroundColor: '#191414',
+    flexDirection: 'row',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 20,
+    marginVertical: 15,
+    borderWidth: 1,
+    borderColor: '#1DB954',
+  },
+  spotifyIcon: {
+    marginRight: 8,
+  },
+  spotifyButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  countContainer: {
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  countText: {
+    color: '#888',
+    fontSize: 14,
   },
 });
 
