@@ -9,27 +9,46 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  StyleSheet,
+  Linking,
+  FlatList,
+  Modal,
 } from 'react-native';
 import { useEffect, useState, useRef } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../../hooks/firebase';
-import { MaterialIcons } from '@expo/vector-icons';
+import { doc, getDoc, collection, getDocs, addDoc, query, where, orderBy, updateDoc } from 'firebase/firestore';
+import { db, auth, storage } from '../../hooks/firebase';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import globalStyles from '../../styles/globalStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MusicPlayer, { MusicPlayerRef } from '../../components/MusicPlayer';
 import { useMusicUpload, MusicTrackInfo } from '../../hooks/useMusicUpload';
 import { Audio } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Concert = {
   id: string;
   artistName: string;
   venueName: string;
+  venueAddress?: string;
   genre: string;
   date: string;
   price: string;
   imageUrl: string;
   musicTrack?: MusicTrackInfo;
+  description?: string;
+  ticketUrl?: string;
+};
+
+type ConcertPhoto = {
+  id: string;
+  imageUrl: string;
+  uploadedBy: string;
+  uploadedByName: string;
+  createdAt: string;
+  concertId: string;
 };
 
 export default function EventDetail() {
@@ -40,6 +59,11 @@ export default function EventDetail() {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [didInitialLoad, setDidInitialLoad] = useState(false);
+  const [isUserAttended, setIsUserAttended] = useState(false);
+  const [photos, setPhotos] = useState<ConcertPhoto[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const playerRef = useRef<MusicPlayerRef>(null);
   
   const { uploadMusicFile, deleteMusicTrack, isUploading, error } = useMusicUpload();
@@ -104,6 +128,24 @@ export default function EventDetail() {
         );
       }
     };
+
+    // Check if user has attended this concert
+    const checkAttendanceStatus = async () => {
+      if (!auth.currentUser) return;
+      
+      try {
+        const userDataStr = await AsyncStorage.getItem('userData');
+        if (userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          if (userData.attendedConcerts && Array.isArray(userData.attendedConcerts)) {
+            const eventId = Array.isArray(id) ? id[0] : id;
+            setIsUserAttended(userData.attendedConcerts.includes(eventId));
+          }
+        }
+      } catch (error) {
+        console.error('Error checking attendance status:', error);
+      }
+    };
     
     // Check if user is admin (for development/testing purposes)
     const checkAdminStatus = async () => {
@@ -113,9 +155,170 @@ export default function EventDetail() {
     };
     
     fetchEvent();
+    fetchConcertPhotos();
+    checkAttendanceStatus();
     checkAdminStatus();
   }, [id]);
 
+  const fetchConcertPhotos = async () => {
+    try {
+      setLoadingPhotos(true);
+      const eventId = Array.isArray(id) ? id[0] : id;
+      
+      const photosQuery = query(
+        collection(db, 'concertPhotos'),
+        where('concertId', '==', eventId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const snapshot = await getDocs(photosQuery);
+      
+      const photoData: ConcertPhoto[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as ConcertPhoto));
+      
+      setPhotos(photoData);
+    } catch (error) {
+      console.error('Error fetching concert photos:', error);
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Sign In Required', 'Please sign in to upload photos.');
+      return;
+    }
+    
+    try {
+      // Request camera roll permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'We need camera roll permissions to upload photos.');
+        return;
+      }
+      
+      // Pick an image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      
+      if (result.canceled) return;
+      
+      const image = result.assets[0];
+      setUploading(true);
+      
+      // Get image data
+      const response = await fetch(image.uri);
+      const blob = await response.blob();
+      
+      // Get user data
+      const userDataStr = await AsyncStorage.getItem('userData');
+      const userData = userDataStr ? JSON.parse(userDataStr) : {};
+      const displayName = userData.displayName || 'Anonymous User';
+      
+      // Generate a unique filename
+      const eventId = Array.isArray(id) ? id[0] : id;
+      const fileName = `concert_photos/${eventId}/${auth.currentUser.uid}_${Date.now()}`;
+      const storageRef = ref(storage, fileName);
+      
+      // Upload to Firebase Storage
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+      
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Progress monitoring if needed
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`Upload is ${progress}% complete`);
+        },
+        (error) => {
+          console.error('Upload error:', error);
+          Alert.alert('Upload Failed', 'Failed to upload your photo. Please try again.');
+          setUploading(false);
+        },
+        async () => {
+          // Upload completed, get download URL
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          
+          // Save photo metadata to Firestore
+          const photoData = {
+            concertId: eventId,
+            imageUrl: downloadURL,
+            uploadedBy: auth.currentUser.uid,
+            uploadedByName: displayName,
+            createdAt: new Date().toISOString(),
+          };
+          
+          await addDoc(collection(db, 'concertPhotos'), photoData);
+          
+          // Update local state
+          setPhotos(prev => [{
+            id: `temp_${Date.now()}`,
+            ...photoData,
+          } as ConcertPhoto, ...prev]);
+          
+          Alert.alert('Success', 'Your photo has been uploaded!');
+          setUploading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      Alert.alert('Upload Error', 'There was a problem uploading your photo. Please try again.');
+      setUploading(false);
+    }
+  };
+
+  const markAsAttended = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Sign In Required', 'Please sign in to mark this concert as attended.');
+      return;
+    }
+    
+    try {
+      const eventId = Array.isArray(id) ? id[0] : id;
+      const userDocRef = doc(db, 'users', auth.currentUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const attendedConcerts = userData.attendedConcerts || [];
+        
+        if (!attendedConcerts.includes(eventId)) {
+          const updatedConcerts = [...attendedConcerts, eventId];
+          
+          // Update Firestore
+          await updateDoc(userDocRef, {
+            attendedConcerts: updatedConcerts,
+          });
+          
+          // Update local storage
+          const userDataStr = await AsyncStorage.getItem('userData');
+          if (userDataStr) {
+            const localUserData = JSON.parse(userDataStr);
+            localUserData.attendedConcerts = updatedConcerts;
+            await AsyncStorage.setItem('userData', JSON.stringify(localUserData));
+          }
+          
+          setIsUserAttended(true);
+          Alert.alert('Success', 'This concert has been added to your past concerts!');
+        } else {
+          Alert.alert('Already Attended', 'This concert is already in your past concerts.');
+        }
+      }
+    } catch (error) {
+      console.error('Error marking concert as attended:', error);
+      Alert.alert('Error', 'Failed to update your attended concerts. Please try again.');
+    }
+  };
+
+  // Handle toggle playback function
   const handleTogglePlayback = async () => {
     if (!event?.musicTrack?.url) {
       console.error("No music track URL available");
@@ -216,6 +419,47 @@ export default function EventDetail() {
     );
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString; // Return original if invalid
+      
+      // Format: Fri, March 28th • 6:30 PM
+      const options: Intl.DateTimeFormatOptions = { 
+        weekday: 'short',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      };
+      
+      return date.toLocaleDateString('en-US', options).replace(',', '');
+    } catch (error) {
+      return dateString; // Return original string if there's an error
+    }
+  };
+
+  const openMaps = (venue: string, address?: string) => {
+    const query = address || venue;
+    const mapsUrl = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+    });
+    
+    if (mapsUrl) {
+      Linking.canOpenURL(mapsUrl)
+        .then(supported => {
+          if (supported) {
+            return Linking.openURL(mapsUrl);
+          } else {
+            return Linking.openURL(`https://maps.google.com/maps?q=${query}`);
+          }
+        })
+        .catch(err => console.error('An error occurred', err));
+    }
+  };
+
   if (!event) {
     return (
       <View style={[globalStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -225,149 +469,429 @@ export default function EventDetail() {
     );
   }
 
+  // Format date for display (e.g., "Fri, March 28th • 6:30 PM")
+  const formattedDate = formatDate(event.date);
+  const venueAddress = event.venueAddress || "1320 S Lamar Blvd"; // Default address if none provided
+
   return (
     <ImageBackground
       source={{ uri: event.imageUrl }}
-      style={globalStyles.fullscreenBackground}
-      blurRadius={25}
+      style={styles.imageBackground}
     >
-      <BlurView intensity={70} tint="dark" style={globalStyles.fullscreenBlurOverlay}>
-        <SafeAreaView style={{ flex: 1 }}>
-          
-          {/* 🔙 Custom Back Button */}
-          <TouchableOpacity
-            onPress={router.back}
-            style={{
-              padding: 12,
-              position: 'absolute',
-              top: 16,
-              left: 16,
-              zIndex: 10,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              borderRadius: 50,
-            }}
-          >
-            <MaterialIcons name="arrow-back" size={24} color="white" />
+      <SafeAreaView style={styles.container}>
+        {/* Top Nav Bar with Back Button and Action Buttons */}
+        <View style={styles.navBar}>
+          <TouchableOpacity onPress={router.back} style={styles.navButton}>
+            <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
-
-          <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 60 }}>
-            {/* 📸 Main image with margin */}
-            <Image
-              source={{ uri: event.imageUrl }}
-              style={[globalStyles.eventImage, { marginBottom: 20 }]}
-            />
-
-            {/* 📝 Event Overview */}
-            <View style={{ marginBottom: 24 }}>
-              <Text style={globalStyles.sectionTitle}>Event Overview</Text>
-              <Text style={globalStyles.description}>
-                Artist at this venue is playing her original songs from her new album. This is an event held on campus at {event.venueName}.
-              </Text>
-            </View>
-
-            {/* 🎵 Music Player Section */}
-            {event.musicTrack?.url && showMusicPlayer && (
-              <View style={{ marginBottom: 24 }}>
-                <Text style={globalStyles.subheading}>Music Preview</Text>
-                <MusicPlayer 
-                  ref={playerRef}
-                  trackUrl={event.musicTrack.url} 
-                  trackTitle={`${event.artistName} - ${event.musicTrack.name}`} 
-                  autoPlay={isAudioPlaying} 
-                />
-                
-                {isAdmin && (
-                  <TouchableOpacity 
-                    style={{ 
-                      flexDirection: 'row', 
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: 'rgba(255, 0, 0, 0.2)',
-                      padding: 8,
-                      borderRadius: 6,
-                      marginTop: 8 
-                    }}
-                    onPress={handleDeleteTrack}
-                  >
-                    <MaterialIcons name="delete" size={18} color="#FF6B6B" />
-                    <Text style={{ color: '#FF6B6B', marginLeft: 6, fontSize: 14 }}>Remove Music Track</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+          
+          <View style={styles.rightButtons}>
+            <TouchableOpacity style={styles.navButton}>
+              <Ionicons name="share-outline" size={24} color="white" />
+            </TouchableOpacity>
+            {isUserAttended ? (
+              <TouchableOpacity style={styles.navButton}>
+                <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.navButton}
+                onPress={markAsAttended}
+              >
+                <Ionicons name="add-circle-outline" size={24} color="white" />
+              </TouchableOpacity>
             )}
+          </View>
+        </View>
 
-            {/* 🎤 Artist */}
-            <Text style={globalStyles.subheading}>Artist</Text>
-            <View style={globalStyles.rowBox}>
-              <View style={globalStyles.iconRow}>
-                <MaterialIcons name="account-circle" size={24} color="white" />
-                <Text style={globalStyles.infoText}>{event.artistName}</Text>
+        <ScrollView style={styles.scrollView}>
+          {/* Main Event Image */}
+          <Image
+            source={{ uri: event.imageUrl }}
+            style={styles.mainImage}
+            resizeMode="cover"
+          />
+
+          {/* Performance Overview Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Performance Overview</Text>
+            <Text style={styles.description}>
+              {event.description || `${event.artistName} is an indie rock band who will be playing their original songs from their latest album, Severance. This performance will held at the ${event.venueName}.`}
+            </Text>
+          </View>
+
+          {/* Artist Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Artist</Text>
+            <View style={styles.artistRow}>
+              <View style={styles.artistButton}>
+                <Ionicons name="person-circle" size={24} color="#ff585d" />
+                <Text style={styles.artistName}>{event.artistName}</Text>
+              </View>
+
+              {/* Music Demo Button */}
+              <TouchableOpacity 
+                style={styles.musicDemoButton}
+                onPress={handleTogglePlayback}
+              >
+                <Ionicons name={isAudioPlaying ? "pause" : "play"} size={24} color="white" />
+                <Text style={styles.musicDemoText}>Play music demo</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Details Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Details</Text>
+            <View style={styles.detailsBox}>
+              {/* Venue */}
+              <View style={styles.detailRow}>
+                <Ionicons name="location" size={24} color="#ff585d" />
+                <View style={styles.detailTextContainer}>
+                  <Text style={styles.detailLabel}>Venue</Text>
+                  <TouchableOpacity onPress={() => openMaps(event.venueName, venueAddress)}>
+                    <Text style={styles.detailValue}>{event.venueName} • <Text style={styles.linkText}>{venueAddress}</Text></Text>
+                  </TouchableOpacity>
+                </View>
               </View>
               
-              {event.musicTrack?.url ? (
-                <View style={{ flexDirection: 'row' }}>
-                  <TouchableOpacity 
-                    style={globalStyles.playButton}
-                    onPress={handleTogglePlayback}
-                  >
-                    <MaterialIcons 
-                      name={isAudioPlaying ? "pause" : "play-arrow"} 
-                      size={20} 
-                      color="white" 
-                    />
-                    <Text style={globalStyles.playText}>
-                      {isAudioPlaying 
-                        ? "Pause music demo" 
-                        : "Play music demo"
-                      }
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  {/* Debug button - only visible in development */}
-                  {__DEV__ && (
-                    <TouchableOpacity 
-                      style={[globalStyles.playButton, { backgroundColor: '#444', marginLeft: 8 }]}
-                      onPress={showDebugInfo}
-                    >
-                      <MaterialIcons name="bug-report" size={20} color="white" />
-                    </TouchableOpacity>
-                  )}
+              {/* Genre */}
+              <View style={styles.detailRow}>
+                <Ionicons name="musical-notes" size={24} color="#ff585d" />
+                <View style={styles.detailTextContainer}>
+                  <Text style={styles.detailLabel}>Genre</Text>
+                  <Text style={styles.detailValue}>{event.genre}</Text>
                 </View>
-              ) : isAdmin ? (
+              </View>
+              
+              {/* Date & Time */}
+              <View style={styles.detailRow}>
+                <Ionicons name="calendar" size={24} color="#ff585d" />
+                <View style={styles.detailTextContainer}>
+                  <Text style={styles.detailLabel}>Date & Time</Text>
+                  <Text style={styles.detailValue}>{formattedDate}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Concert Photos Section - Only visible for past concerts */}
+          {isUserAttended && (
+            <View style={styles.section}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>Concert Photos</Text>
                 <TouchableOpacity 
-                  style={globalStyles.playButton}
-                  onPress={handleUploadTrack}
-                  disabled={isUploading}
+                  style={styles.uploadButton}
+                  onPress={handleUploadPhoto}
+                  disabled={uploading}
                 >
-                  {isUploading ? (
+                  {uploading ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
                     <>
-                      <MaterialIcons name="upload" size={20} color="white" />
-                      <Text style={globalStyles.playText}>Upload Music</Text>
+                      <Ionicons name="camera" size={16} color="white" />
+                      <Text style={styles.uploadButtonText}>Add Photo</Text>
                     </>
                   )}
                 </TouchableOpacity>
-              ) : null}
+              </View>
+              
+              {loadingPhotos ? (
+                <ActivityIndicator size="large" color="#ff585d" style={styles.photosLoading} />
+              ) : photos.length === 0 ? (
+                <View style={styles.noPhotosContainer}>
+                  <Ionicons name="images-outline" size={60} color="#555" />
+                  <Text style={styles.noPhotosText}>No photos yet</Text>
+                  <Text style={styles.noPhotosSubtext}>Be the first to share a memory!</Text>
+                </View>
+              ) : (
+                <FlatList
+                  horizontal
+                  data={photos}
+                  keyExtractor={item => item.id}
+                  contentContainerStyle={styles.photosList}
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity 
+                      style={styles.photoItem}
+                      onPress={() => setSelectedPhoto(item.imageUrl)}
+                    >
+                      <Image
+                        source={{ uri: item.imageUrl }}
+                        style={styles.thumbnail}
+                      />
+                      <Text style={styles.photoUploader} numberOfLines={1}>
+                        {item.uploadedByName}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              )}
             </View>
+          )}
 
-            {/* 📋 Details */}
-            <Text style={globalStyles.subheading}>Details</Text>
-            <View style={globalStyles.detailsBox}>
-              <Text style={globalStyles.detailItem}>📍 {event.venueName}</Text>
-              <Text style={globalStyles.detailItem}>🎵 {event.genre}</Text>
-              <Text style={globalStyles.detailItem}>📅 {event.date}</Text>
-              <Text style={globalStyles.detailItem}>💵 {event.price}</Text>
+          {/* Action Buttons */}
+          <View style={styles.actionsContainer}>
+            {isUserAttended ? (
+              <TouchableOpacity 
+                style={[styles.ticketButton, { backgroundColor: '#4CAF50' }]}
+                onPress={handleUploadPhoto}
+              >
+                <Text style={styles.ticketButtonText}>Upload Memory</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.ticketButton}
+                onPress={markAsAttended}
+              >
+                <Text style={styles.ticketButtonText}>RSVP</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {event.musicTrack?.url && showMusicPlayer && (
+            <View style={styles.musicPlayerContainer}>
+              <MusicPlayer 
+                ref={playerRef}
+                trackUrl={event.musicTrack.url} 
+                trackTitle={`${event.artistName} - ${event.musicTrack.name}`} 
+                autoPlay={isAudioPlaying} 
+              />
             </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
 
-            {/* 🧠 RSVP */}
-            <Text style={globalStyles.subheading}>Interested?</Text>
-            <TouchableOpacity style={globalStyles.rsvpButton}>
-              <Text style={globalStyles.rsvpText}>RSVP</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </SafeAreaView>
-      </BlurView>
+      {/* Full-size photo modal */}
+      <Modal
+        visible={!!selectedPhoto}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedPhoto(null)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setSelectedPhoto(null)}
+          >
+            <Ionicons name="close" size={28} color="white" />
+          </TouchableOpacity>
+          {selectedPhoto && (
+            <Image
+              source={{ uri: selectedPhoto }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  imageBackground: {
+    flex: 1,
+  },
+  navBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    height: 50,
+  },
+  navButton: {
+    padding: 8,
+  },
+  rightButtons: {
+    flexDirection: 'row',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  mainImage: {
+    width: '100%',
+    height: 250,
+  },
+  section: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 10,
+  },
+  description: {
+    fontSize: 16,
+    color: '#cccccc',
+    lineHeight: 24,
+  },
+  artistRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  artistButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 88, 93, 0.15)',
+    borderRadius: 8,
+    padding: 12,
+    flex: 1,
+    marginRight: 10,
+  },
+  artistName: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  musicDemoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ff585d',
+    borderRadius: 8,
+    padding: 12,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+  },
+  musicDemoText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  detailsBox: {
+    backgroundColor: 'rgba(20, 20, 20, 0.5)',
+    borderRadius: 8,
+    padding: 15,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  detailTextContainer: {
+    marginLeft: 15,
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#888888',
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '500',
+  },
+  linkText: {
+    textDecorationLine: 'underline',
+    color: '#4a90e2',
+  },
+  actionsContainer: {
+    padding: 15,
+    marginBottom: 30,
+  },
+  ticketButton: {
+    backgroundColor: '#ff585d',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  ticketButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  musicPlayerContainer: {
+    padding: 15,
+    marginBottom: 20,
+  },
+  // Photo gallery styles
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 88, 93, 0.8)',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  uploadButtonText: {
+    color: 'white',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  photosList: {
+    paddingVertical: 10,
+  },
+  photoItem: {
+    marginRight: 10,
+    width: 150,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  thumbnail: {
+    width: 150,
+    height: 150,
+    borderRadius: 8,
+  },
+  photoUploader: {
+    color: 'white',
+    fontSize: 12,
+    textAlign: 'center',
+    paddingVertical: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  noPhotosContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+  },
+  noPhotosText: {
+    color: 'white',
+    fontSize: 18,
+    marginTop: 10,
+  },
+  noPhotosSubtext: {
+    color: '#888',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  photosLoading: {
+    marginVertical: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '100%',
+    height: '80%',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 5,
+  },
+});

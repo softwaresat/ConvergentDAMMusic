@@ -336,8 +336,8 @@ export default function ProfileScreen() {
 
       <Text style={globalStyles.sectionTitle}>
         {userData.attendedConcerts && userData.attendedConcerts.length > 0
-          ? 'Concerts Attended'
-          : 'Bookmarked Concerts'}
+          ? 'My Past Concerts'
+          : 'My Past Concerts'}
       </Text>
 
       {loading ? (
@@ -353,46 +353,52 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.concertsList}
           showsVerticalScrollIndicator={true}
           renderItem={({ item }) => (
-            <ThemedView style={globalStyles.postContainer}>
-              <ImageBackground
-                source={{ uri: item.imageUrl }}
-                style={globalStyles.posterImage}
-              >
-                <View style={globalStyles.overlay}>
-                <View style={globalStyles.artistRow}>
-                    <View style={globalStyles.artistInfo}>
-                      <MaterialIcons name="account-circle" size={20} color="white" />
-                      <Text style={globalStyles.artistName}>{item.artistName}</Text>
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              onPress={() => router.push(`/event/${item.id}`)}
+              style={{width: '100%'}}
+            >
+              <ThemedView style={globalStyles.postContainer}>
+                <ImageBackground
+                  source={{ uri: item.imageUrl }}
+                  style={globalStyles.posterImage}
+                >
+                  <View style={globalStyles.overlay}>
+                  <View style={globalStyles.artistRow}>
+                      <View style={globalStyles.artistInfo}>
+                        <MaterialIcons name="account-circle" size={20} color="white" />
+                        <Text style={globalStyles.artistName}>{item.artistName}</Text>
+                      </View>
+                      <View style={globalStyles.actions}>
+                        <MaterialIcons name="ios-share" size={20} color="white" style={globalStyles.iconSpacing} />
+                        <MaterialIcons name="bookmark-outline" size={20} color="white" />
+                      </View>
                     </View>
-                    <View style={globalStyles.actions}>
-                      <MaterialIcons name="ios-share" size={20} color="white" style={globalStyles.iconSpacing} />
-                      <MaterialIcons name="bookmark-outline" size={20} color="white" />
+
+                    <View style={globalStyles.infoRow}>
+                      <MaterialIcons name="location-on" size={20} color="white" />
+                      <Text style={globalStyles.venueName}>{item.venueName}</Text>
+                    </View>
+                    <View style={globalStyles.infoRow}>
+                      <MaterialIcons name="music-note" size={20} color="white" />
+                      <Text style={globalStyles.genre}>{item.genre}</Text>
+                    </View>
+
+                    <View style={globalStyles.bottomContainer}>
+                      <TouchableOpacity style={globalStyles.playButton}>
+                        <MaterialIcons name="play-arrow" size={20} color="red" />
+                        <Text style={globalStyles.playText}>Play music demo</Text>
+                      </TouchableOpacity>
+
+                      <View style={globalStyles.priceContainer}>
+                        <Text style={globalStyles.price}>{item.price}</Text>
+                        <Text style={globalStyles.date}>{item.date}</Text>
+                      </View>
                     </View>
                   </View>
-
-                  <View style={globalStyles.infoRow}>
-                    <MaterialIcons name="location-on" size={20} color="white" />
-                    <Text style={globalStyles.venueName}>{item.venueName}</Text>
-                  </View>
-                  <View style={globalStyles.infoRow}>
-                    <MaterialIcons name="music-note" size={20} color="white" />
-                    <Text style={globalStyles.genre}>{item.genre}</Text>
-                  </View>
-
-                  <View style={globalStyles.bottomContainer}>
-                    <TouchableOpacity style={globalStyles.playButton}>
-                      <MaterialIcons name="play-arrow" size={20} color="red" />
-                      <Text style={globalStyles.playText}>Play music demo</Text>
-                    </TouchableOpacity>
-
-                    <View style={globalStyles.priceContainer}>
-                      <Text style={globalStyles.price}>{item.price}</Text>
-                      <Text style={globalStyles.date}>{item.date}</Text>
-                    </View>
-                  </View>
-                </View>
-              </ImageBackground>
-            </ThemedView>
+                </ImageBackground>
+              </ThemedView>
+            </TouchableOpacity>
           )}
         />
       )}

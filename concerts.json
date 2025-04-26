@@ -48,6 +48,30 @@
     }
   },
   {
+    "artistName": "CorMae",
+    "date": "Friday, April 25th - 4:00 PM",
+    "genre": "Example",
+    "imageUrl": "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+    "price": 10,
+    "venueName": "Moody Center",
+    "location": {
+      "latitude": 30.2810,
+      "longitude": 97.7307
+    }
+  },
+  {
+    "artistName": "Evania",
+    "date": "Tuesday, April 22nd - 1:00 PM",
+    "genre": "Example",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvejgTfU5zEgMGwoS9Dd9r47tJShK2EyWOJw&s",
+    "price": 5,
+    "venueName": "Jester Performance Hall",
+    "location": {
+      "latitude": 30.2810,
+      "longitude": 97.7307
+    }
+  },
+  {
     "artistName": "Velvet Thunder",
     "date": "Fri, April 25th - 9:30 PM",
     "genre": "Hard Rock",
