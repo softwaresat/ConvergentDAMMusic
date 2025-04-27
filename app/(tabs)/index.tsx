@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
-import { View, Text, StyleSheet, Dimensions, FlatList, StatusBar, TextInput, ActivityIndicator } from 'react-native';
+import { Image, TouchableOpacity, ImageBackground, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, FlatList, StatusBar, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -61,7 +61,7 @@ const RecommendationCarousel = ({ title, concerts, router }) => {
 export default function HomeScreen() {
   const router = useRouter();
   const searchParams = useLocalSearchParams();
-  const { concerts: allConcerts, loading, error } = useConcerts();
+  const { concerts: allConcerts, loading, error, refreshConcerts } = useConcerts();
   
   // State for filtered concerts
   const [concerts, setConcerts] = useState([]);
@@ -69,7 +69,37 @@ export default function HomeScreen() {
   const [userGenres, setUserGenres] = useState<string[]>([]);
   const [userGenreRecommendations, setUserGenreRecommendations] = useState([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   
+  // Force refresh function that clears cache
+  const forceRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Clear the concerts cache
+      await AsyncStorage.removeItem('cached_concerts');
+      await AsyncStorage.removeItem('last_concerts_fetch_time');
+      console.log('Cleared concerts cache');
+      
+      // Force refresh from Firebase
+      await refreshConcerts();
+      
+      Alert.alert(
+        "Data Refreshed", 
+        "The concert data has been refreshed from the database.",
+        [{ text: "OK" }]
+      );
+    } catch (error) {
+      console.error('Error during force refresh:', error);
+      Alert.alert(
+        "Refresh Failed", 
+        "There was a problem refreshing the data. Please try again.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   // Load user's favorite genres
   useEffect(() => {
     const loadUserGenres = async () => {
@@ -192,7 +222,37 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={forceRefresh}
+            colors={["#ff585d"]}
+            tintColor={"#ff585d"}
+          />
+        }
+      >
+        <View style={styles.headerContainer}>
+          <Text style={globalStyles.carouselTitle}>
+            {isFiltered ? "Filtered Concerts" : "All Concerts"}
+          </Text>
+          
+          <TouchableOpacity 
+            style={styles.refreshButton} 
+            onPress={forceRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <MaterialIcons name="refresh" size={16} color="#fff" />
+                <Text style={styles.refreshText}>Refresh</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
         {isFiltered && (
           <View style={globalStyles.filteredInfo}>
             <Text style={globalStyles.filteredText}>Showing {concerts.length} filtered concerts</Text>
@@ -222,11 +282,6 @@ export default function HomeScreen() {
             />
           </>
         )}
-        
-        {/* All Concerts */}
-        <Text style={globalStyles.carouselTitle}>
-          {isFiltered ? "Filtered Concerts" : "All Concerts"}
-        </Text>
         
         {/* Concert List */}
         {concerts.map(item => (
@@ -264,7 +319,12 @@ export default function HomeScreen() {
                   {/* Bottom Section - Play Button (Left) & Price/Date (Right) */}
                   <View style={globalStyles.bottomContainer}>
                     {/* Play Button (Bottom Left) */}
-                    <TouchableOpacity style={globalStyles.playButton}>
+                    <TouchableOpacity 
+                      style={globalStyles.playButton}
+                      onPress={() => {
+                        router.push(`/event/${item.id}`);
+                      }}
+                    >
                       <MaterialIcons name="play-arrow" size={20} color="red" />
                       <Text style={globalStyles.playText}>Play music demo</Text>
                     </TouchableOpacity>
@@ -280,7 +340,79 @@ export default function HomeScreen() {
             </ThemedView>
           </TouchableOpacity>
         ))}
+
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#ff585d" />
+            <Text style={styles.loadingText}>Loading concerts...</Text>
+          </View>
+        )}
+
+        {error && (
+          <View style={styles.errorContainer}>
+            <MaterialIcons name="error-outline" size={40} color="#ff585d" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity 
+              style={styles.retryButton} 
+              onPress={forceRefresh}
+            >
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+// Add these styles
+const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingRight: 15,
+    marginTop: 10
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    backgroundColor: '#ff585d',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  refreshText: {
+    color: 'white',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#888',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    marginTop: 10,
+    color: '#ff585d',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  retryButton: {
+    backgroundColor: '#ff585d',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  retryText: {
+    color: 'white',
+    fontWeight: '500',
+  }
+});

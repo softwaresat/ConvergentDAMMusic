@@ -93,14 +93,31 @@ export function useConcerts() {
       const concertData = await safeFirestoreOperation(async () => {
         const concertsCollection = collection(db, 'concerts');
         
-        // Create a query to sort concerts by date
+        // Create a query to sort concerts by dateTimestamp if available, fallback to date
+        // This ensures concerts are sorted by actual date, not string comparison
         const concertsQuery = query(
           concertsCollection,
-          orderBy('date', 'desc'),
-          limit(50) // Limit to 50 concerts for performance
+          orderBy('dateTimestamp', 'desc'),
+          limit(100) // Increased limit to make sure we get all concerts
         );
         
         const querySnapshot = await getDocs(concertsQuery);
+        
+        // If no results with dateTimestamp (older records), try the original query
+        if (querySnapshot.empty) {
+          console.log("[Concerts] No concerts found with dateTimestamp, falling back to date sorting");
+          const legacyQuery = query(
+            concertsCollection,
+            orderBy('date', 'desc'),
+            limit(100)
+          );
+          
+          const legacySnapshot = await getDocs(legacyQuery);
+          return legacySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+        }
         
         return querySnapshot.docs.map(doc => ({
           id: doc.id,

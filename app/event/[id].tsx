@@ -23,6 +23,7 @@ import globalStyles from '../../styles/globalStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MusicPlayer, { MusicPlayerRef } from '../../components/MusicPlayer';
 import { useMusicUpload, MusicTrackInfo } from '../../hooks/useMusicUpload';
+import { hasLocalMusicFile, loadLocalMusicFile } from '../../hooks/useLocalMusic';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -64,6 +65,9 @@ export default function EventDetail() {
   const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [localMusicAvailable, setLocalMusicAvailable] = useState(false);
+  const [localMusicUri, setLocalMusicUri] = useState<string | null>(null);
+  const [usingLocalMusic, setUsingLocalMusic] = useState(false);
   const playerRef = useRef<MusicPlayerRef>(null);
   
   const { uploadMusicFile, deleteMusicTrack, isUploading, error } = useMusicUpload();
@@ -159,6 +163,32 @@ export default function EventDetail() {
     checkAttendanceStatus();
     checkAdminStatus();
   }, [id]);
+
+  // Add a check for local music files when the event is loaded
+  useEffect(() => {
+    const checkLocalMusic = async () => {
+      if (!event) return;
+      
+      // Check if this artist has a local music file
+      const hasLocal = hasLocalMusicFile(event.artistName);
+      setLocalMusicAvailable(hasLocal);
+      
+      if (hasLocal) {
+        try {
+          // Load the local music file
+          const uri = await loadLocalMusicFile(event.artistName);
+          if (uri) {
+            console.log(`Local music file found for ${event.artistName}:`, uri);
+            setLocalMusicUri(uri);
+          }
+        } catch (error) {
+          console.error('Error loading local music file:', error);
+        }
+      }
+    };
+    
+    checkLocalMusic();
+  }, [event]);
 
   const fetchConcertPhotos = async () => {
     try {
@@ -318,36 +348,46 @@ export default function EventDetail() {
     }
   };
 
-  // Handle toggle playback function
+  // Handle toggle playback function - updated to handle local music
   const handleTogglePlayback = async () => {
-    if (!event?.musicTrack?.url) {
-      console.error("No music track URL available");
+    // If using local music, prioritize it
+    const shouldUseLocal = localMusicAvailable && localMusicUri;
+    
+    // Check if we have any music to play (either local or remote)
+    if (!shouldUseLocal && !event?.musicTrack?.url) {
+      console.error("No music track available");
+      Alert.alert('No Music Available', 'There is no music track available for this artist.');
       return;
     }
     
-    console.log("Toggle playback called with URL:", event.musicTrack.url);
-    console.log("Current state - showMusicPlayer:", showMusicPlayer, "isAudioPlaying:", isAudioPlaying);
-    
     try {
+      // If player is showing, just toggle play state
       if (showMusicPlayer) {
-        // Player is already showing, toggle play state
         if (isAudioPlaying) {
-          console.log("Attempting to pause...");
+          console.log("Pausing playback...");
           const result = await playerRef.current?.pause();
           console.log("Pause result:", result);
           setIsAudioPlaying(false);
         } else {
-          console.log("Attempting to play...");
+          console.log("Resuming playback...");
           const result = await playerRef.current?.play();
           console.log("Play result:", result);
           setIsAudioPlaying(true);
         }
       } else {
-        // Player isn't showing yet, show it
+        // If not showing, set up the player with either local or remote URL
+        if (shouldUseLocal) {
+          console.log("Using local music file:", localMusicUri);
+          setUsingLocalMusic(true);
+        } else {
+          console.log("Using remote music URL:", event.musicTrack.url);
+          setUsingLocalMusic(false);
+        }
+        
         console.log("Showing player and setting autoPlay");
         setShowMusicPlayer(true);
         
-        // We need to give the component time to mount before setting autoPlay
+        // Give the component time to mount before setting autoPlay
         setTimeout(() => {
           setIsAudioPlaying(true);
         }, 500);
@@ -406,13 +446,17 @@ export default function EventDetail() {
     );
   };
 
+  // Show debug info - updated for local music
   const showDebugInfo = () => {
-    if (!event?.musicTrack) return;
+    const musicInfo = usingLocalMusic ? 
+      { source: 'Local', uri: localMusicUri } : 
+      (event?.musicTrack ? { source: 'Remote', uri: event.musicTrack.url } : { source: 'None', uri: null });
     
     Alert.alert(
       "Music Debug Info",
-      `Track URL: ${event.musicTrack.url.substring(0, 50)}...\n` +
-      `Track name: ${event.musicTrack.name}\n` +
+      `Artist: ${event?.artistName}\n` +
+      `Source: ${musicInfo.source}\n` +
+      `URI: ${musicInfo.uri?.substring(0, 50)}...\n` +
       `Player visible: ${showMusicPlayer}\n` +
       `Is playing: ${isAudioPlaying}\n` +
       `Player ref exists: ${!!playerRef.current}`
@@ -441,22 +485,56 @@ export default function EventDetail() {
   };
 
   const openMaps = (venue: string, address?: string) => {
-    const query = address || venue;
-    const mapsUrl = Platform.select({
-      ios: `maps:0,0?q=${query}`,
-      android: `geo:0,0?q=${query}`,
-    });
+    const query = encodeURIComponent(address || venue);
     
-    if (mapsUrl) {
-      Linking.canOpenURL(mapsUrl)
+    // Handle iOS devices
+    if (Platform.OS === 'ios') {
+      // Try Apple Maps first (most reliable on iOS)
+      const appleMapsUrl = `maps:?q=${query}&address=${query}`;
+      
+      Linking.canOpenURL(appleMapsUrl)
         .then(supported => {
           if (supported) {
-            return Linking.openURL(mapsUrl);
+            return Linking.openURL(appleMapsUrl);
           } else {
-            return Linking.openURL(`https://maps.google.com/maps?q=${query}`);
+            // If Apple Maps URL scheme isn't supported, try Google Maps app URL
+            const googleMapsIosUrl = `comgooglemaps://?q=${query}`;
+            return Linking.canOpenURL(googleMapsIosUrl)
+              .then(hasGoogleMaps => {
+                if (hasGoogleMaps) {
+                  return Linking.openURL(googleMapsIosUrl);
+                } else {
+                  // Last resort: open in browser
+                  return Linking.openURL(`https://maps.apple.com/?q=${query}`);
+                }
+              });
           }
         })
-        .catch(err => console.error('An error occurred', err));
+        .catch(err => {
+          console.error('Error opening maps on iOS:', err);
+          // Fallback to web
+          Linking.openURL(`https://maps.google.com/maps?q=${query}`);
+        });
+    } 
+    // Handle Android devices
+    else {
+      // Try native Android intent
+      const androidMapsUrl = `geo:0,0?q=${query}`;
+      
+      Linking.canOpenURL(androidMapsUrl)
+        .then(supported => {
+          if (supported) {
+            return Linking.openURL(androidMapsUrl);
+          } else {
+            // If no map app handles the geo URI, try Google Maps directly
+            const googleMapsUrl = `https://maps.google.com/maps?q=${query}`;
+            return Linking.openURL(googleMapsUrl);
+          }
+        })
+        .catch(err => {
+          console.error('Error opening maps on Android:', err);
+          Linking.openURL(`https://maps.google.com/maps?q=${query}`);
+        });
     }
   };
 
@@ -529,13 +607,18 @@ export default function EventDetail() {
                 <Text style={styles.artistName}>{event.artistName}</Text>
               </View>
 
-              {/* Music Demo Button */}
+              {/* Music Demo Button - show differently if local music is available */}
               <TouchableOpacity 
-                style={styles.musicDemoButton}
+                style={[
+                  styles.musicDemoButton, 
+                  localMusicAvailable ? { backgroundColor: '#4CAF50' } : {}
+                ]}
                 onPress={handleTogglePlayback}
               >
                 <Ionicons name={isAudioPlaying ? "pause" : "play"} size={24} color="white" />
-                <Text style={styles.musicDemoText}>Play music demo</Text>
+                <Text style={styles.musicDemoText}>
+                  {localMusicAvailable ? 'Play Demo' : 'Play music demo'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -649,12 +732,14 @@ export default function EventDetail() {
             )}
           </View>
 
-          {event.musicTrack?.url && showMusicPlayer && (
+          {showMusicPlayer && (
             <View style={styles.musicPlayerContainer}>
               <MusicPlayer 
                 ref={playerRef}
-                trackUrl={event.musicTrack.url} 
-                trackTitle={`${event.artistName} - ${event.musicTrack.name}`} 
+                trackUrl={usingLocalMusic ? localMusicUri! : event.musicTrack?.url!} 
+                trackTitle={usingLocalMusic 
+                  ? `${event.artistName} - Local Demo` 
+                  : `${event.artistName} - ${event.musicTrack?.name || 'Music Demo'}`} 
                 autoPlay={isAudioPlaying} 
               />
             </View>

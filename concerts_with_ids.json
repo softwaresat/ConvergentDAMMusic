@@ -9,7 +9,9 @@
     "location": {
       "latitude": 30.26623,
       "longitude": -97.73881
-    }
+    },
+    "id": "the-blue-echoes-antone-s-nightclub",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Social Dissonance",
@@ -21,7 +23,9 @@
     "location": {
       "latitude": 30.26901,
       "longitude": -97.73604
-    }
+    },
+    "id": "social-dissonance-stubb-s-bar-b-q",
+    "hasLocalMusic": true
   },
   {
     "artistName": "Fifi KnifeFight",
@@ -33,7 +37,9 @@
     "location": {
       "latitude": 30.27002,
       "longitude": -97.73658
-    }
+    },
+    "id": "fifi-knifefight-mohawk-austin",
+    "hasLocalMusic": false
   },
   {
     "artistName": "CorMae",
@@ -45,7 +51,9 @@
     "location": {
       "latitude": 30.25131,
       "longitude": -97.74955
-    }
+    },
+    "id": "cormae-the-continental-club",
+    "hasLocalMusic": true
   },
   {
     "artistName": "Evania",
@@ -57,7 +65,9 @@
     "location": {
       "latitude": 30.26538,
       "longitude": -97.74876
-    }
+    },
+    "id": "evania-acl-live-at-the-moody-theater",
+    "hasLocalMusic": true
   },
   {
     "artistName": "Luna Bloom",
@@ -69,7 +79,9 @@
     "location": {
       "latitude": 30.24593,
       "longitude": -97.73348
-    }
+    },
+    "id": "luna-bloom-emo-s-austin",
+    "hasLocalMusic": false
   },
   {
     "artistName": "The Groove Merchants",
@@ -81,7 +93,9 @@
     "location": {
       "latitude": 30.26745,
       "longitude": -97.74037
-    }
+    },
+    "id": "the-groove-merchants-the-parish",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Silver Linings Band",
@@ -92,8 +106,10 @@
     "venueName": "Scoot Inn",
     "location": {
       "latitude": 30.26081,
-      "longitude": -97.72900
-    }
+      "longitude": -97.729
+    },
+    "id": "silver-linings-band-scoot-inn",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Midnight Howlers",
@@ -105,7 +121,9 @@
     "location": {
       "latitude": 30.26509,
       "longitude": -97.74231
-    }
+    },
+    "id": "midnight-howlers-elephant-room",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Solar Flare Five",
@@ -117,7 +135,9 @@
     "location": {
       "latitude": 30.26967,
       "longitude": -97.73636
-    }
+    },
+    "id": "solar-flare-five-cheer-up-charlies",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Whispering Pines",
@@ -129,7 +149,9 @@
     "location": {
       "latitude": 30.28971,
       "longitude": -97.74193
-    }
+    },
+    "id": "whispering-pines-hole-in-the-wall",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Electric Zephyr",
@@ -141,7 +163,9 @@
     "location": {
       "latitude": 30.18285,
       "longitude": -97.80589
-    }
+    },
+    "id": "electric-zephyr-sam-s-town-point",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Diamond Dust Diva",
@@ -153,7 +177,9 @@
     "location": {
       "latitude": 30.18447,
       "longitude": -97.78983
-    }
+    },
+    "id": "diamond-dust-diva-far-out-lounge---stage",
+    "hasLocalMusic": false
   },
   {
     "artistName": "The River Rogues",
@@ -163,9 +189,11 @@
     "price": 0,
     "venueName": "Radio Coffee & Beer",
     "location": {
-      "latitude": 30.23070,
+      "latitude": 30.2307,
       "longitude": -97.77681
-    }
+    },
+    "id": "the-river-rogues-radio-coffee---beer",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Amber Waves",
@@ -175,9 +203,11 @@
     "price": 8,
     "venueName": "The Ballroom",
     "location": {
-      "latitude": 30.29400,
-      "longitude": -97.74000
-    }
+      "latitude": 30.294,
+      "longitude": -97.74
+    },
+    "id": "amber-waves-the-ballroom",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Concrete Jungle Beats",
@@ -189,7 +219,9 @@
     "location": {
       "latitude": 30.26274,
       "longitude": -97.72627
-    }
+    },
+    "id": "concrete-jungle-beats-hotel-vegas",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Shadow Play Ensemble",
@@ -201,7 +233,9 @@
     "location": {
       "latitude": 30.25982,
       "longitude": -97.72439
-    }
+    },
+    "id": "shadow-play-ensemble-the-white-horse",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Golden Hour Quartet",
@@ -213,7 +247,9 @@
     "location": {
       "latitude": 30.26706,
       "longitude": -97.73564
-    }
+    },
+    "id": "golden-hour-quartet-empire-control-room---garage",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Crimson Keys",
@@ -223,9 +259,11 @@
     "price": 0,
     "venueName": "Geraldine's",
     "location": {
-      "latitude": 30.26000,
+      "latitude": 30.26,
       "longitude": -97.73859
-    }
+    },
+    "id": "crimson-keys-geraldine-s",
+    "hasLocalMusic": false
   },
   {
     "artistName": "Static Bloom",
@@ -236,7 +274,9 @@
     "venueName": "C-Boy's Heart & Soul",
     "location": {
       "latitude": 30.24451,
-      "longitude": -97.75330
-    }
+      "longitude": -97.7533
+    },
+    "id": "static-bloom-c-boy-s-heart---soul",
+    "hasLocalMusic": false
   }
 ]
